@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Quiz — Cronograma Casa Impecável</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{font-family:'Poppins',sans-serif;background:#F7F4FD;color:#1a1a2e;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* ── QUIZ HEADER (logo + progress) ── */
+#qhdr{position:fixed;top:0;left:0;right:0;background:#fff;padding:10px 20px 11px;box-shadow:0 1px 10px rgba(0,0,0,.07);z-index:999;display:none}
+#qhdr.on{display:block}
+.qhdr-logo{display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;color:#3B0764;margin-bottom:9px}
+.qhdr-logo strong{font-weight:700}
+.qhdr-track{height:5px;background:#EDE9FE;border-radius:99px;overflow:hidden;max-width:400px;margin:0 auto}
+#qhdr-fill{height:100%;background:linear-gradient(90deg,#8B5CF6,#6D28D9);border-radius:99px;width:0%;transition:width .5s ease}
+
+/* ── SCREENS ── */
+.s{display:none;min-height:100vh;padding:24px 16px 56px;flex-direction:column;align-items:center}
+.s.on{display:flex}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.s.on{animation:fi .13s ease}
+.quiz-s{padding-top:74px} /* offset for fixed header */
+
+/* ── COVER ── */
+#s0{background:url('https://i.ibb.co/Vc1d2kF1/FUNDO-QUIZ-1.jpg') center/cover no-repeat;padding:0;position:relative}
+.cov{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 22px;text-align:center;gap:15px;position:relative;z-index:1}
+.cov-h1{font-size:23px;font-weight:800;color:#1a1a2e;line-height:1.35;max-width:360px}
+.cov-h1 .or{color:#F59E0B}
+.cov-h1 .gr{color:#16A34A}
+.cov-sub{font-size:13.5px;color:#333;line-height:1.65;max-width:320px;font-weight:400}
+.cov-sub strong{color:#1a1a2e;font-weight:600}
+.cov-img{width:100%;max-width:300px;border-radius:16px}
+.cov-arrow{font-size:13px;color:#444;font-weight:500}
+
+/* ── BUTTONS ── */
+@keyframes glow{0%,100%{box-shadow:0 4px 18px rgba(34,197,94,.5),0 0 0 0 rgba(34,197,94,.2)}60%{box-shadow:0 4px 28px rgba(34,197,94,.7),0 0 0 7px rgba(34,197,94,0)}}
+.btn-start{display:block;width:100%;max-width:320px;padding:17px 24px;background:linear-gradient(135deg,#22C55E,#16A34A);color:#fff;font-family:'Poppins',sans-serif;font-size:17px;font-weight:700;border:none;border-radius:14px;cursor:pointer;letter-spacing:.3px;animation:glow 2.2s infinite}
+.btn-start:active{transform:scale(.97)}
+.btn-cta{display:block;width:100%;max-width:420px;padding:18px 24px;background:linear-gradient(135deg,#22C55E,#16A34A);color:#fff;font-family:'Poppins',sans-serif;font-size:15.5px;font-weight:700;border:none;border-radius:14px;cursor:pointer;letter-spacing:.3px;text-align:center;margin:0 auto;animation:glow 2.2s infinite}
+.btn-cta:active{transform:scale(.97)}
+
+/* ── QUESTION WRAP ── */
+.qw{width:100%;max-width:440px}
+.qt{font-size:20px;font-weight:700;color:#1a1a2e;text-align:center;line-height:1.35;margin-bottom:8px}
+.qs{font-size:12.5px;color:#A78BFA;text-align:center;margin-bottom:18px;font-weight:500}
+
+/* ── OPTIONS ── */
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;align-items:center;gap:13px;padding:14px 16px;background:#fff;border:2px solid #EDE9FE;border-radius:14px;cursor:pointer;font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;color:#374151;text-align:left;width:100%;box-shadow:0 1px 4px rgba(109,40,217,.05);transition:border-color .08s,background .08s}
+.opt:active,.opt.sel{border-color:#8B5CF6;background:#F5F0FF}
+.opt-e{font-size:21px;flex-shrink:0;width:26px;text-align:center}
+.opt-t{flex:1;line-height:1.35}
+.opt .ck{width:20px;height:20px;border:2px solid #D1D5DB;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-left:auto;transition:all .08s}
+.opt.sel .ck{background:#8B5CF6;border-color:#8B5CF6}
+.opt.sel .ck::after{content:'✓';color:#fff;font-size:12px;font-weight:700}
+@keyframes glow2{0%,100%{box-shadow:0 4px 18px rgba(139,92,246,.45)}60%{box-shadow:0 4px 26px rgba(139,92,246,.7)}}
+.btn-cont{width:100%;padding:15px;background:#8B5CF6;color:#fff;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;border:none;border-radius:13px;cursor:pointer;margin-top:14px;opacity:.35;pointer-events:none;transition:opacity .18s}
+.btn-cont.on{opacity:1;pointer-events:auto;animation:glow2 2.2s infinite}
+
+/* ── LOADING ── */
+.lw{width:100%;max-width:440px;padding-top:20px}
+.lhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.ltitle{font-size:21px;font-weight:700;color:#1a1a2e}
+.lpct{font-size:16px;font-weight:700;color:#22C55E}
+.ltrack{width:100%;height:15px;background:#E8DFFE;border-radius:8px;overflow:hidden;margin-bottom:10px}
+.lfill{height:100%;background:linear-gradient(90deg,#22C55E,#4ADE80);border-radius:8px;width:0%;transition:width .22s linear}
+.lsub{font-size:15px;color:#9CA3AF;margin-bottom:22px;text-align:center;font-weight:400}
+.ltests{display:flex;flex-direction:column;gap:14px}
+.ltests img{width:100%;border-radius:12px;display:block;box-shadow:0 4px 18px rgba(0,0,0,.12)}
+
+/* ── RESULT ── */
+.rw{width:100%;max-width:440px;padding-top:8px}
+.rbadge{font-size:19px;font-weight:700;color:#1a1a2e;text-align:center;margin-bottom:14px}
+.rlead{font-size:14.5px;color:#374151;text-align:center;line-height:1.65;margin-bottom:16px;font-weight:400}
+.rimg{width:100%;border-radius:16px;margin-bottom:18px;display:block}
+.rbox{background:#F5F0FF;border-left:4px solid #8B5CF6;padding:14px 16px;border-radius:0 13px 13px 0;margin-bottom:16px;font-size:14px;color:#4B5563;line-height:1.65}
+.rculpa{font-size:20px;font-weight:700;text-align:center;color:#1a1a2e;margin:16px 0 14px;line-height:1.3}
+.rul{list-style:none;margin-bottom:22px}
+.rul li{display:flex;align-items:flex-start;gap:9px;padding:10px 0;font-size:14px;line-height:1.45;border-bottom:1px solid #EDE9FE;font-weight:400}
+.rul li:last-child{border-bottom:none}
+.rcta{font-size:14.5px;font-weight:600;color:#374151;text-align:center;margin-bottom:16px}
+
+/* ═══════════════════════════
+   SALES PAGE
+═══════════════════════════ */
+.sw{width:100%;max-width:460px}
+
+/* hero */
+.shero{background:linear-gradient(145deg,#3B0764,#7C3AED);color:#fff;text-align:center;padding:38px 22px 34px;border-radius:0 0 30px 30px;margin:-24px -16px 28px;width:calc(100% + 32px);position:relative;overflow:hidden}
+.shero::before{content:'';position:absolute;top:-70px;right:-70px;width:240px;height:240px;background:rgba(255,255,255,.06);border-radius:50%;pointer-events:none}
+.shero::after{content:'';position:absolute;bottom:-80px;left:-60px;width:220px;height:220px;background:rgba(251,191,36,.06);border-radius:50%;pointer-events:none}
+.shero-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:5px 14px;font-size:12px;font-weight:600;letter-spacing:.3px;margin-bottom:14px}
+.shero-sup{font-size:11px;opacity:.6;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:4px;font-weight:500}
+.shero-title{font-size:30px;font-weight:900;line-height:1.2;margin-bottom:14px}
+.shero-title .gold{color:#FBBF24}
+.shero-div{width:44px;height:3px;background:rgba(255,255,255,.3);border-radius:3px;margin:0 auto 16px}
+.shero-sub{font-size:14.5px;color:rgba(255,255,255,.92);line-height:1.65;font-weight:400;margin-bottom:18px;position:relative;z-index:1}
+.shero-sub strong{color:#fff;font-weight:700}
+.shero-pills{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;position:relative;z-index:1}
+.shero-pill{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:99px;padding:4px 10px;font-size:11px;font-weight:600}
+
+/* video */
+.vcard{background:#000;border-radius:14px;overflow:hidden;margin-bottom:0;min-height:210px}
+.shero .vcard{margin:0 8px 18px;border-radius:12px}
+
+/* benefits card */
+.bcard{background:#fff;border-radius:16px;padding:20px;margin-bottom:24px;box-shadow:0 2px 16px rgba(109,40,217,.08)}
+.bcard-title{font-size:16px;font-weight:700;color:#3B0764;text-align:center;margin-bottom:16px;line-height:1.45}
+.bens{list-style:none}
+.bens li{display:flex;align-items:flex-start;gap:10px;padding:11px 0;font-size:15px;line-height:1.5;border-bottom:1px solid #F3F4F6;font-weight:400;color:#374151}
+.bens li:last-child{border-bottom:none}
+.chk{color:#22C55E;font-size:17px;flex-shrink:0;margin-top:2px}
+
+/* section headers */
+.shdr{color:#fff;text-align:center;padding:20px 20px;margin:8px -16px 18px;width:calc(100% + 32px)}
+.shdr h2{font-size:17px;font-weight:800;line-height:1.4}
+.shdr .gold{color:#FBBF24}
+.shdr-purple{background:linear-gradient(135deg,#3B0764,#7C3AED)}
+.shdr-bonus{background:linear-gradient(135deg,#5B21B6,#8B5CF6)}
+.shdr-dark{background:#1a1a2e}
+
+/* social proof */
+.sp-section{background:#F9FAFB;border-radius:16px;padding:20px 16px;margin-bottom:8px}
+.sp-count{font-size:15px;color:#374151;text-align:center;margin-bottom:16px;font-weight:400;line-height:1.6}
+.tests{display:flex;flex-direction:column;gap:14px}
+.tests img{width:100%;border-radius:12px;display:block;box-shadow:0 4px 18px rgba(0,0,0,.12)}
+
+/* receive */
+.rcv-section{background:#fff;border-radius:16px;padding:20px 18px;margin-bottom:8px;box-shadow:0 2px 16px rgba(109,40,217,.06)}
+.rcv-intro{font-size:15px;color:#4B5563;text-align:center;margin-bottom:16px;font-weight:400;line-height:1.6}
+.rcv{padding:13px 0;border-bottom:1px solid #F3F4F6}
+.rcv:last-child{border-bottom:none}
+.rcv-t{font-size:15px;font-weight:700;color:#3B0764;margin-bottom:4px}
+.rcv-d{font-size:14px;color:#6B7280;line-height:1.5;font-weight:400}
+
+/* bonus cards */
+.boncard{background:#fff;border-radius:16px;overflow:hidden;margin-bottom:13px;box-shadow:0 6px 24px rgba(109,40,217,.13)}
+.boncard-img{width:100%;display:block;aspect-ratio:16/9;object-fit:cover}
+.boncard-body{padding:14px 16px}
+.bon-name{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:4px}
+.bon-desc{font-size:14px;color:#6B7280;line-height:1.5;margin-bottom:8px;font-weight:400}
+.bon-price .old{color:#D1D5DB;text-decoration:line-through;font-size:13px;margin-right:6px}
+.bon-price .free{color:#22C55E;font-weight:700;font-size:14px}
+
+/* order box */
+.obox{background:#fff;border:3px solid #8B5CF6;border-radius:22px;overflow:hidden;margin:24px 0;box-shadow:0 8px 32px rgba(139,92,246,.18)}
+.obox-top{background:linear-gradient(135deg,#3B0764,#7C3AED);padding:18px 20px 16px;text-align:center}
+.obox-top h3{font-size:17px;font-weight:700;color:#fff;margin-bottom:2px}
+.obox-top h3 .gold{color:#FBBF24}
+.obox-top p{font-size:12px;color:rgba(255,255,255,.8);font-weight:400}
+.obox-body{padding:20px 18px}
+.mockup{width:100%;max-width:260px;margin:0 auto 18px;display:block;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.plist{list-style:none;margin-bottom:16px}
+.plist li{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F3F4F6;font-size:13.5px;font-weight:400}
+.plist li:last-child{border-bottom:none}
+.pname{color:#4B5563}
+.pold{color:#D1D5DB;text-decoration:line-through;font-size:12px}
+.obox-price{text-align:center;background:#F0FDF4;border:2px solid #BBF7D0;border-radius:14px;padding:18px;margin-bottom:16px}
+.de{font-size:15px;color:#EF4444;text-decoration:line-through;font-weight:500;margin-bottom:2px}
+.por{font-size:13px;color:#9CA3AF;font-weight:400}
+.pmain{font-size:58px;font-weight:900;color:#22C55E;line-height:1;margin-bottom:4px}
+.psave{color:#16A34A;font-size:15px;font-weight:700}
+.timer{background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:12px;padding:10px 16px;text-align:center;margin-bottom:16px;font-size:13px;color:#92400E;font-weight:500}
+.tnum{font-size:26px;font-weight:900;color:#EF4444;font-variant-numeric:tabular-nums;letter-spacing:1px}
+.ptrust{font-size:11.5px;color:#9CA3AF;text-align:center;margin-top:10px;font-weight:400}
+
+/* expert */
+.expert{background:linear-gradient(145deg,#3B0764,#5B21B6);border-radius:20px;padding:26px 18px;margin:24px 0;color:#fff}
+.expert h2{font-size:17px;font-weight:700;text-align:center;line-height:1.35;margin-bottom:16px}
+.expert .gold{color:#FBBF24}
+.expert img{width:100%;border-radius:14px;margin-bottom:16px;display:block}
+.ename{font-size:14.5px;font-weight:700;margin-bottom:12px;line-height:1.4}
+.expert p{font-size:13.5px;line-height:1.7;opacity:.93;margin-bottom:10px;font-weight:400}
+
+/* guarantee */
+.guar{background:#F5F0FF;border:2px solid #8B5CF6;border-radius:20px;padding:26px 18px;margin:24px 0;text-align:center}
+.gt{font-size:22px;font-weight:700;color:#3B0764;line-height:1.3;margin-bottom:4px}
+.gdays{color:#FBBF24}
+.gseal{width:90px;margin:12px auto;display:block}
+.gtxt{font-size:15px;color:#4B5563;line-height:1.7;font-weight:400}
+.gtxt strong{color:#1a1a2e;font-weight:600}
+
+/* faq */
+.faq-section{background:#fff;border-radius:16px;padding:20px 18px;margin-bottom:24px;box-shadow:0 2px 16px rgba(109,40,217,.06)}
+.faq-ttl{font-size:22px;font-weight:700;color:#FBBF24;text-align:center;margin-bottom:18px}
+.fi{border-bottom:1px solid #EDE9FE;padding:14px 0}
+.fi:last-child{border-bottom:none}
+.fq{font-size:15.5px;font-weight:700;color:#3B0764;margin-bottom:6px}
+.fa{font-size:15px;color:#6B7280;line-height:1.6;font-weight:400}
+
+/* util */
+.mt8{margin-top:8px}
+.mt16{margin-top:16px}
+.mb8{margin-bottom:8px}
+.mb16{margin-bottom:16px}
+.spacer{height:40px}
+.tc{text-align:center}
+.sp-text{font-size:14px;font-weight:400;color:#4B5563;line-height:1.65;text-align:center;margin-bottom:18px}
+</style>
+<!-- Utmify pixel -->
+<script>
+  window.pixelId = "6a13876d03db4abb12f68721";
+  var a = document.createElement("script");
+  a.setAttribute("async", "");
+  a.setAttribute("defer", "");
+  a.setAttribute("src", "https://cdn.utmify.com.br/scripts/pixel/pixel.js");
+  document.head.appendChild(a);
+</script>
+<!-- Utmify UTM capture -->
+<script
+  src="https://cdn.utmify.com.br/scripts/utms/latest.js"
+  data-utmify-prevent-xcod-sck
+  data-utmify-prevent-subids
+  data-utmify-ignore-iframe
+  data-utmify-is-cartpanda
+  async
+  defer
+></script>
+</head>
+<body>
+
+<!-- QUIZ HEADER -->
+<div id="qhdr">
+  <div class="qhdr-logo">
+    <span>🏠</span><span>Casa <strong>Impecável</strong></span>
+  </div>
+  <div class="qhdr-track"><div id="qhdr-fill"></div></div>
+</div>
+
+<!-- ══ CAPA ══ -->
+<div id="s0" class="s on">
+  <div class="cov">
+    <h1 class="cov-h1">Descubra o <span class="or">erro invisível</span> que impede sua casa de ficar <span class="gr">limpa</span>, <span class="or">cheirosa</span> e <span class="gr">aconchegante</span> do jeito que você gosta</h1>
+    <p class="cov-sub">Em menos de <strong>2 minutos</strong> você vai <strong>entender</strong> por que sua casa <strong>nunca</strong> fica do <strong>jeitinho</strong> que você quer.</p>
+    <img src="https://i.ibb.co/JfTwK3W/IMG-CAPA.jpg" alt="" class="cov-img" onerror="this.style.display='none'">
+    <p class="cov-arrow">👇 Aperte no <strong>botão abaixo</strong> e descubra 👇</p>
+    <button class="btn-start" onclick="go(1)">Começar</button>
+  </div>
+</div>
+
+<!-- ══ PERGUNTAS COMUNS 1–7 ══ -->
+<div id="s1" class="s quiz-s"><div class="qw">
+  <h2 class="qt">Qual é o tamanho da sua casa?</h2>
+  <div class="opts">
+    <button class="opt" onclick="adv(this,2)"><span class="opt-e">🏠</span><span class="opt-t">Apartamento compacto ou kitne</span></button>
+    <button class="opt" onclick="adv(this,2)"><span class="opt-e">🏡</span><span class="opt-t">Pequena (até 2 quartos)</span></button>
+    <button class="opt" onclick="adv(this,2)"><span class="opt-e">🏘</span><span class="opt-t">Média (3 quartos)</span></button>
+    <button class="opt" onclick="adv(this,2)"><span class="opt-e">💒</span><span class="opt-t">Grande (4 quartos ou mais)</span></button>
+  </div>
+</div></div>
+
+<div id="s2" class="s quiz-s"><div class="qw">
+  <h2 class="qt">Você tem criança pequena ou bebê em casa?</h2>
+  <div class="opts">
+    <button class="opt" onclick="adv(this,3)"><span class="opt-e">👶</span><span class="opt-t">Sim</span></button>
+    <button class="opt" onclick="adv(this,3)"><span class="opt-e">👫</span><span class="opt-t">Não</span></button>
+    <button class="opt" onclick="adv(this,3)"><span class="opt-e">👧</span><span class="opt-t">Não, mas tenho filhos mais velhos</span></button>
+  </div>
+</div></div>
+
+<div id="s3" class="s quiz-s"><div class="qw">
+  <h2 class="qt">Você trabalha fora ou em home office?</h2>
+  <div class="opts">
+    <button class="opt" onclick="adv(this,4)"><span class="opt-e">🏢</span><span class="opt-t">Trabalho fora o dia todo</span></button>
+    <button class="opt" onclick="adv(this,4)"><span class="opt-e">💻</span><span class="opt-t">Trabalho em home office</span></button>
+    <button class="opt" onclick="adv(this,4)"><span class="opt-e">🕑</span><span class="opt-t">Trabalho meio período</span></button>
+    <button class="opt" onclick="adv(this,4)"><span class="opt-e">🏡</span><span class="opt-t">Estou em casa em tempo integral</span></button>
+  </div>
+</div></div>
+
+<div id="s4" class="s quiz-s"><div class="qw">
+  <h2 class="qt">Você tem um lugar onde anota ou organiza as tarefas da casa?</h2>
+  <div class="opts">
+    <button class="opt" onclick="adv(this,5)"><span class="opt-e">❌</span><span class="opt-t">Não tenho nada</span></button>
+    <button class="opt" onclick="adv(this,5)"><span class="opt-e">📝</span><span class="opt-t">Tenho anotações soltas</span></button>
+    <button class="opt" onclick="adv(this,5)"><span class="opt-e">📱</span><span class="opt-t">Uso bloco, whatsapp, caderno ou app</span></button>
+    <button class="opt" onclick="adv(this,5)"><span class="opt-e">📊</span><span class="opt-t">Uso uma planilha ou cronograma escrito</span></button>
+  </div>
+</div></div>
+
+<div id="s5" class="s quiz-s"><div class="qw">
+  <h2 class="qt">Você sente que sua casa fica limpa de forma equilibrada?</h2>
+  <div class="opts">
+    <button class="opt" onclick="adv(this,6)"><span class="opt-e">😭</span><span class="opt-t">Nunca. Sempre tem coisa suja ou esquecida</span></button>
+    <button class="opt" onclick="adv(this,6)"><span class="opt-e">😔</span><span class="opt-t">Às vezes sim, mas logo bagunça de novo</span></button>
+    <button class="opt" onclick="adv(this,6)"><span class="opt-e">🙄</span><span class="opt-t">A faxina até acontece, mas falta rotina no restante</span></button>
+    <button class="opt" onclick="adv(this,6)"><span class="opt-e">🫠</span><span class="opt-t">Sim, mas com muito esforço da minha parte</span></button>
+  </div>
+</div></div>
+
+<div id="s6" class="s quiz-s"><div class="qw">
+  <h2 class="qt">O que acontece quando você não consegue manter a casa do jeito que gostaria?</h2>
+  <div class="opts">
+    <button class="opt" onclick="adv(this,7)"><span class="opt-e">😤</span><span class="opt-t">Fico estressada, sinto que nada anda</span></button>
+    <button class="opt" onclick="adv(this,7)"><span class="opt-e">😩</span><span class="opt-t">Me sinto sobrecarregada, porque sobra tudo pra mim</span></button>
+    <button class="opt" onclick="adv(this,7)"><span class="opt-e">🤬</span><span class="opt-t">Me irrito com quem mora comigo</span></button>
+    <button class="opt" onclick="adv(this,7)"><span class="opt-e">😑</span><span class="opt-t">Já aceitei que vai ficar do jeito que der</span></button>
+  </div>
+</div></div>
+
+<div id="s7" class="s quiz-s"><div class="qw">
+  <h2 class="qt">Hoje, você tem uma funcionária/diarista que cuida da limpeza da casa?</h2>
+  <div class="opts">
+    <button class="opt" onclick="br('A',this,'a8')"><span class="opt-e">👩‍🍳</span><span class="opt-t">Eu tenho uma funcionária todos os dias da semana</span></button>
+    <button class="opt" onclick="br('A',this,'a8')"><span class="opt-e">🧹</span><span class="opt-t">Tenho diarista 1 a 4 vezes por semana</span></button>
+    <button class="opt" onclick="br('A',this,'a8')"><span class="opt-e">🧽</span><span class="opt-t">Tenho diarista 1 a 2 vezes por mês</span></button>
+    <button class="opt" onclick="br('B',this,'b7')"><span class="opt-e">🙋</span><span class="opt-t">Eu faço tudo sozinha</span></button>
+  </div>
+</div></div>
+
+<!-- ══ FLUXO A ══ -->
+<div id="sa8" class="s quiz-s"><div class="qw"><h2 class="qt">Como é a divisão de tarefas com sua funcionária ou diarista?</h2><div class="opts">
+  <button class="opt" onclick="adv(this,'a9')"><span class="opt-e">🤷</span><span class="opt-t">Ela faz tudo sozinha, mas sem muita orientação</span></button>
+  <button class="opt" onclick="adv(this,'a9')"><span class="opt-e">🗣</span><span class="opt-t">Eu dou as tarefas no dia, conforme vejo necessidade</span></button>
+  <button class="opt" onclick="adv(this,'a9')"><span class="opt-e">📆</span><span class="opt-t">Temos uma certa rotina, mas sem nada estruturado</span></button>
+  <button class="opt" onclick="adv(this,'a9')"><span class="opt-e">✅</span><span class="opt-t">Já temos um cronograma com tudo organizado por dia e horário</span></button>
+</div></div></div>
+
+<div id="sa9" class="s quiz-s"><div class="qw"><h2 class="qt">Você sente que sua funcionária tem clareza do que deve ser feito durante o dia?</h2><div class="opts">
+  <button class="opt" onclick="adv(this,'a10')"><span class="opt-e">❓</span><span class="opt-t">Não, ela me pergunta tudo todo dia</span></button>
+  <button class="opt" onclick="adv(this,'a10')"><span class="opt-e">🤔</span><span class="opt-t">Mais ou menos</span></button>
+  <button class="opt" onclick="adv(this,'a10')"><span class="opt-e">⚡</span><span class="opt-t">Sim, mas sinto que poderia ser mais eficiente</span></button>
+  <button class="opt" onclick="adv(this,'a10')"><span class="opt-e">✅</span><span class="opt-t">Sim, tudo muito bem definido e não passa nada</span></button>
+</div></div></div>
+
+<div id="sa10" class="s quiz-s"><div class="qw"><h2 class="qt">Mesmo com ajuda, sua casa fica do jeito que você gostaria?</h2><div class="opts">
+  <button class="opt" onclick="adv(this,'a11')"><span class="opt-e">😵</span><span class="opt-t">Não, a sensação é que está sempre bagunçada ou mal cuidada</span></button>
+  <button class="opt" onclick="adv(this,'a11')"><span class="opt-e">😬</span><span class="opt-t">Fica mais ou menos… tem dias que está boa, outros um caos</span></button>
+  <button class="opt" onclick="adv(this,'a11')"><span class="opt-e">🙂</span><span class="opt-t">Fica aceitável, mas pequenos detalhes sempre passam batido</span></button>
+  <button class="opt" onclick="adv(this,'a11')"><span class="opt-e">😍</span><span class="opt-t">Sim, tudo fica impecável, no detalhe, sem eu precisar pensar em nada</span></button>
+</div></div></div>
+
+<div id="sa11" class="s quiz-s"><div class="qw"><h2 class="qt">Sua funcionária/diarista costuma fazer as coisas do jeito que você espera?</h2><div class="opts">
+  <button class="opt" onclick="adv(this,'a12')"><span class="opt-e">😤</span><span class="opt-t">Não, ela faz tudo do jeito dela, e eu vivo refazendo depois</span></button>
+  <button class="opt" onclick="adv(this,'a12')"><span class="opt-e">😅</span><span class="opt-t">Na maioria das vezes não, mas eu acabo deixando passar</span></button>
+  <button class="opt" onclick="adv(this,'a12')"><span class="opt-e">🤏</span><span class="opt-t">Ela acerta o geral, mas sempre tem um detalhe fora do padrão</span></button>
+  <button class="opt" onclick="adv(this,'a12')"><span class="opt-e">😍</span><span class="opt-t">Sim, ela faz exatamente como eu gosto e eu nunca preciso corrigir nada</span></button>
+</div></div></div>
+
+<div id="sa12" class="s quiz-s"><div class="qw"><h2 class="qt">Ela lembra sozinha de fazer as limpezas mais "escondidas" (vidros, filtros, armários)?</h2><div class="opts">
+  <button class="opt" onclick="adv(this,'a13')"><span class="opt-e">😵</span><span class="opt-t">Não lembra de nada, eu sempre tenho que avisar</span></button>
+  <button class="opt" onclick="adv(this,'a13')"><span class="opt-e">😬</span><span class="opt-t">Às vezes faz, mas só se eu insistir</span></button>
+  <button class="opt" onclick="adv(this,'a13')"><span class="opt-e">🤔</span><span class="opt-t">Ela até lembra de algumas, mas esquece outras</span></button>
+  <button class="opt" onclick="adv(this,'a13')"><span class="opt-e">😎</span><span class="opt-t">Sim, ela tem um controle perfeito e nunca esquece de nada</span></button>
+</div></div></div>
+
+<div id="sa13" class="s quiz-s"><div class="qw"><h2 class="qt">O que você faz quando a limpeza não sai como você gostaria?</h2><div class="opts">
+  <button class="opt" onclick="adv(this,'a14')"><span class="opt-e">😫</span><span class="opt-t">Fico estressada e acabo limpando tudo de novo sozinha</span></button>
+  <button class="opt" onclick="adv(this,'a14')"><span class="opt-e">😠</span><span class="opt-t">Me irrito com a funcionária, mas guardo pra mim</span></button>
+  <button class="opt" onclick="adv(this,'a14')"><span class="opt-e">😕</span><span class="opt-t">Deixo passar, mas isso me incomoda o dia inteiro</span></button>
+  <button class="opt" onclick="adv(this,'a14')"><span class="opt-e">🗣</span><span class="opt-t">Discuto com a funcionária</span></button>
+  <button class="opt" onclick="adv(this,'a14')"><span class="opt-e">😍</span><span class="opt-t">Nada, porque tudo sempre sai perfeito e não preciso me preocupar com nada</span></button>
+</div></div></div>
+
+<div id="sa14" class="s quiz-s"><div class="qw"><h2 class="qt">Você sente que ainda está sobrecarregada, mesmo tendo ajuda?</h2><div class="opts">
+  <button class="opt" onclick="adv(this,'a15')"><span class="opt-e">😩</span><span class="opt-t">Sim, parece que tudo ainda depende de mim, todos os dias</span></button>
+  <button class="opt" onclick="adv(this,'a15')"><span class="opt-e">🤯</span><span class="opt-t">Sim, mas não sei como aliviar essa sensação</span></button>
+  <button class="opt" onclick="adv(this,'a15')"><span class="opt-e">🤔</span><span class="opt-t">Às vezes, mas tenho tentado ajustar</span></button>
+  <button class="opt" onclick="adv(this,'a15')"><span class="opt-e">🌸</span><span class="opt-t">Não, minha rotina é leve e a casa flui sem eu me preocupar</span></button>
+</div></div></div>
+
+<div id="sa15" class="s quiz-s"><div class="qw">
+  <h2 class="qt" style="font-size:17px;line-height:1.45">Se existisse um cronograma prático, adaptado à sua realidade, que orientasse sua diarista a manter a casa limpa do jeito que você gosta sem você precisar cobrar, refazer ou lembrar de tudo...</h2>
+  <p class="qs">Você toparia seguir um passo a passo pra colocar isso em prática ainda essa semana?</p>
+  <div class="opts">
+    <button class="opt" onclick="adv(this,'a16')"><span class="opt-e">✅</span><span class="opt-t">Sim, é exatamente o que eu preciso!</span></button>
+    <button class="opt" onclick="adv(this,'a16')"><span class="opt-e">😍</span><span class="opt-t">Claro! Preciso de algo objetivo</span></button>
+  </div>
+</div></div>
+
+<!-- A LOADING -->
+<div id="sa16" class="s"><div class="lw">
+  <div class="lhead"><span class="ltitle">Aguarde...</span><span class="lpct" id="pctA">0%</span></div>
+  <div class="ltrack"><div class="lfill" id="fillA"></div></div>
+  <p class="lsub">Nossa Gestora de Rotina está analisando suas respostas.</p>
+  <div class="ltests">
+    <img src="https://i.ibb.co/vxBS89HF/01.png" alt="" loading="lazy" onerror="this.style.display='none'">
+    <img src="https://i.ibb.co/Pv2Vm15b/03.png" alt="" loading="lazy" onerror="this.style.display='none'">
+  </div>
+</div></div>
+
+<!-- A RESULTADO -->
+<div id="sa17" class="s"><div class="rw">
+  <p class="rbadge">📋 AQUI ESTÁ O SEU RESULTADO:</p>
+  <p class="rlead">Você tem <strong>empregada/diarista</strong>, paga direitinho, mas no <strong>final do dia</strong>… ainda é <strong>você</strong> que <strong>refaz</strong>, <strong>cobra</strong>, <strong>orienta</strong> e <strong>carrega</strong> tudo na cabeça.</p>
+  <img src="https://i.ibb.co/5h9Kn8S0/Rica.jpg" alt="" class="rimg" loading="lazy" onerror="this.style.display='none'">
+  <div class="rbox">Isso não é falta de sorte com funcionária. Não é exigência demais sua. <strong>É porque sem um sistema claro, ela sempre vai fazer do jeito dela, não do seu.</strong></div>
+  <h3 class="rculpa">A culpa não é sua. Nem dela. É do improviso.</h3>
+  <ul class="rul">
+    <li><span>😢</span><span>Você já foi atrás <strong>refazer</strong> o que ela <strong>não terminou</strong>;</span></li>
+    <li><span>😶</span><span>Você <strong>evita cobrar</strong> porque não quer criar <strong>climão</strong>;</span></li>
+    <li><span>🔁</span><span>Toda vez que <strong>troca</strong> de diarista <strong>começa</strong> tudo do <strong>zero</strong>;</span></li>
+  </ul>
+  <p class="rcta">Mas tem uma solução simples. E você consegue aplicar ainda essa semana...</p>
+  <button class="btn-cta" onclick="go('a18')">👉 Quero ver a solução</button>
+</div></div>
+
+<!-- A VENDAS -->
+<div id="sa18" class="s"><div class="sw">
+  <div class="shero">
+    <div class="shero-badge">✨ +6.400 famílias transformadas</div>
+    <p class="shero-sup">CONHEÇA O</p>
+    <h1 class="shero-title">Cronograma <span class="gold">Casa Impecável</span></h1>
+    <div class="shero-div"></div>
+    <p class="shero-sub">O <strong>cronograma perfeito</strong> para a sua empregada/diarista trabalhar do jeito que você sempre quis, sem você precisar <strong>cobrar</strong>, <strong>ensinar</strong> ou <strong>refazer</strong> o trabalho.</p>
+    <div class="vcard" id="vidA"></div>
+    <div class="shero-pills">
+      <span class="shero-pill">✅ Sem cobrar</span>
+      <span class="shero-pill">✅ Sem refazer</span>
+      <span class="shero-pill">✅ Sem estresse</span>
+    </div>
+  </div>
+  <div class="bcard">
+    <p class="bcard-title">Um material prático que organiza cada tarefa da sua casa por dia, cômodo e frequência. Cola na geladeira e pronto...</p>
+    <ul class="bens">
+      <li><span class="chk">✅</span><span>Sua empregada/diarista chega e <strong>trabalha</strong> sem te <strong>perguntar</strong> o que <strong>fazer</strong>;</span></li>
+      <li><span class="chk">✅</span><span>Você para de <strong>refazer</strong> o <strong>serviço</strong> depois que ela vai <strong>embora</strong>;</span></li>
+      <li><span class="chk">✅</span><span>Evita <strong>esquecimentos</strong>, <strong>retrabalho</strong> e conversas <strong>desgastantes</strong>;</span></li>
+      <li><span class="chk">✅</span><span>Sua casa fica do <strong>jeito</strong> que <strong>você quer</strong>, não do jeito que ela <strong>acha</strong> que deve <strong>ficar</strong>;</span></li>
+      <li><span class="chk">✅</span><span>Você <strong>finalmente descansa</strong> com a <strong>casa impecável</strong>;</span></li>
+    </ul>
+  </div>
+  <div class="shdr shdr-purple"><h2>QUEM <span class="gold">APLICOU</span> SENTIU A DIFERENÇA...</h2></div>
+  <div class="sp-section">
+    <p class="sp-count">Já são mais de <strong>6.400 famílias</strong> que utilizam o <strong>Cronograma Casa Impecável</strong> e a <strong>sua</strong> pode ser a <strong>próxima</strong>.</p>
+    <div class="tests">
+      <img src="https://i.ibb.co/4ZvxpFvM/02.png" alt="" loading="lazy" onerror="this.style.display='none'">
+      <img src="https://i.ibb.co/QFDN8D2x/INSTA-02.png" alt="" loading="lazy" onerror="this.style.display='none'">
+      <img src="https://i.ibb.co/qMMfgHML/08.png" alt="" loading="lazy" onerror="this.style.display='none'">
+      <img src="https://i.ibb.co/k2PQXcGy/09.png" alt="" loading="lazy" onerror="this.style.display='none'">
+      <img src="https://i.ibb.co/PvQzjP2Y/INSTA-01.png" alt="" loading="lazy" onerror="this.style.display='none'">
+    </div>
+  </div>
+  <div class="shdr shdr-dark"><h2>O QUE VOCÊ VAI <span class="gold">RECEBER:</span></h2></div>
+  <div class="rcv-section">
+    <p class="rcv-intro">O <strong>Cronograma Casa Impecável</strong> conta com <strong>cronogramas</strong> e <strong>checklists prontos</strong> para <strong>baixar</strong>, <strong>imprimir</strong> e usar ainda <strong>hoje</strong>...</p>
+    <div class="rcv"><p class="rcv-t">📅 Cronograma de Limpeza Diária, Semanal e Mensal</p><p class="rcv-d">Ela chega e já sabe o que fazer em cada dia, sem te perguntar nada.</p></div>
+    <div class="rcv"><p class="rcv-t">🔍 Cronograma de Limpezas Escondidas</p><p class="rcv-d">Os cantinhos que ninguém lembra mas que fazem toda a diferença.</p></div>
+    <div class="rcv"><p class="rcv-t">🏠 Cronograma por Cômodo</p><p class="rcv-d">Cada ambiente com tarefas, ordem e frequência definidas, ela trabalha com autonomia total sem precisar de você.</p></div>
+    <div class="rcv"><p class="rcv-t">✏️ Cronograma Personalizável do seu Jeito</p><p class="rcv-d">Adapte para a sua casa, sua rotina e o dia que ela vem, sem nada genérico.</p></div>
+    <div class="rcv"><p class="rcv-t">🛒 Lista de Compras de Materiais de Limpeza Editável</p><p class="rcv-d">Nunca mais irá faltar produto no dia que ela vem.</p></div>
+  </div>
+  <div class="shdr shdr-bonus"><h2>ADQUIRINDO <span class="gold">AGORA</span> VOCÊ LEVA <span class="gold">+4 BÔNUS EXCLUSIVOS:</span></h2></div>
+  <div class="boncard"><img src="https://i.ibb.co/r2r3SpDf/Casa-Inteligente-Econ-mica.jpg" class="boncard-img" alt="" loading="lazy" onerror="this.style.display='none'"><div class="boncard-body"><p class="bon-name">Bônus 01 — Casa Inteligente Econômica</p><p class="bon-desc">Os equipamentos de limpeza que transformam uma faxina de 2 horas em uma de 30 minutos...</p><p class="bon-price"><span class="old">R$69,90</span><span class="free">GRÁTIS</span></p></div></div>
+  <div class="boncard"><img src="https://i.ibb.co/ZRFZqrn6/Card-pio-Semanal-da-Fam-lia.jpg" class="boncard-img" alt="" loading="lazy" onerror="this.style.display='none'"><div class="boncard-body"><p class="bon-name">Bônus 02 — Cardápio Semanal da Família</p><p class="bon-desc">A semana inteira planejada, a família satisfeita e sua cabeça livre de uma preocupação a menos...</p><p class="bon-price"><span class="old">R$59,90</span><span class="free">GRÁTIS</span></p></div></div>
+  <div class="boncard"><img src="https://i.ibb.co/k66fKzfk/101-Hacks-da-Casa-Limpa.jpg" class="boncard-img" alt="" loading="lazy" onerror="this.style.display='none'"><div class="boncard-body"><p class="bon-name">Bônus 03 — 101 Hacks da Casa Limpa</p><p class="bon-desc">50 truques com bicarbonato e 51 com vinagre que vão transformar a higiene de cada cantinho da sua casa...</p><p class="bon-price"><span class="old">R$22,90</span><span class="free">GRÁTIS</span></p></div></div>
+  <div class="boncard"><img src="https://i.ibb.co/0j09Zdhg/F-rmula-Secreta-do-Lar-Perfumado.jpg" class="boncard-img" alt="" loading="lazy" onerror="this.style.display='none'"><div class="boncard-body"><p class="bon-name">Bônus 04 — Fórmula Secreta do Lar Perfumado</p><p class="bon-desc">Receitas exclusivas dos melhores aromatizadores artesanais que deixam cada cômodo com um cheiro incrível...</p><p class="bon-price"><span class="old">R$44,99</span><span class="free">GRÁTIS</span></p></div></div>
+  <div class="obox">
+    <div class="obox-top"><h3>Garanta o Cronograma <span class="gold">Casa Impecável</span></h3><p>Transforme de uma vez por toda a forma como sua casa se mantem limpa e arrumada.</p></div>
+    <div class="obox-body">
+      <img src="https://i.ibb.co/bgPMrgkm/Laura-rica-mockup.jpg" class="mockup" alt="" loading="lazy" onerror="this.style.display='none'">
+      <ul class="plist">
+        <li><span class="pname">Cronograma Casa Impecável</span><span class="pold">R$ 97,00</span></li>
+        <li><span class="pname">Bônus 01 — Casa Inteligente Econômica</span><span class="pold">R$ 69,90</span></li>
+        <li><span class="pname">Bônus 02 — Cardápio Semanal da Família</span><span class="pold">R$ 59,90</span></li>
+        <li><span class="pname">Bônus 03 — 101 Hacks da Casa Limpa</span><span class="pold">R$ 22,90</span></li>
+        <li><span class="pname">Bônus 04 — Fórmula Secreta do Lar Perfumado</span><span class="pold">R$ 44,99</span></li>
+      </ul>
+      <div class="obox-price">
+        <p class="de">De R$ 294,69</p><p class="por">Por apenas</p>
+        <p class="pmain">R$27</p>
+        <p class="psave">✦ Você economiza R$ 267,69</p>
+      </div>
+      <div class="timer">⚠️ Essa oferta irá expirar em: <span class="tnum" id="timerA">16:00</span></div>
+      <button class="btn-cta" onclick="checkout()">QUERO MEU CRONOGRAMA AGORA</button>
+      <p class="ptrust">🔒 Pagamento seguro · 7 dias de garantia</p>
+    </div>
+  </div>
+  <div class="expert">
+    <h2>QUEM ESTÁ POR TRÁS DO <span class="gold">CRONOGRAMA CASA IMPECÁVEL?</span></h2>
+    <img src="https://i.ibb.co/nNH33ryB/Laura-rica-quem-sou-eu.jpg" alt="" loading="lazy" onerror="this.style.display='none'">
+    <p class="ename">Laura Bittencourt — A Treinadora de Empregadas e Diaristas que Revolucionou a Organização Doméstica no Brasil.</p>
+    <p>Eu não criei o Cronograma Casa Impecável numa mesa de escritório. Criei dentro de casa, num dia que eu paguei a diária, a diarista foi embora e eu fui lá limpar o que ficou pra trás. De novo. Pela décima vez.</p>
+    <p>Naquele dia eu entendi que o problema não era ela. Era eu tentando fazer funcionar sem ter um sistema de verdade.</p>
+    <p>Passei meses testando, ajustando, refazendo, até criar uma rotina tão clara que minha diarista chegava, olhava e trabalhava. Sem me perguntar nada. Sem eu precisar conferir depois.</p>
+    <p>Hoje sou treinadora de empregadas e diaristas e já transformei a rotina de mais de 6.400 famílias que viviam exatamente o que você vive agora.</p>
+    <p>Você não está cansada porque é desorganizada. Você está cansada porque nunca teve um sistema feito pra sua realidade. E é exatamente isso que eu vim te entregar.</p>
+    <button class="btn-cta mt16" onclick="checkout()">QUERO MEU CRONOGRAMA AGORA</button>
+  </div>
+  <div class="guar">
+    <h2 class="gt">GARANTIA INCONDICIONAL<br>DE <span class="gdays">07 DIAS</span></h2>
+    <img src="https://i.ibb.co/xtKCYPYk/Selo-garantia.png" class="gseal" alt="" loading="lazy" onerror="this.style.display='none'">
+    <p class="gtxt">Temos tanta <strong>certeza</strong> que o <strong>Cronograma Casa Impecável</strong> vai <strong>funcionar</strong> na sua <strong>casa</strong> que o <strong>risco</strong> fica todo com a gente. Você tem <strong>7 dias</strong> para <strong>testar</strong>, <strong>imprimir</strong>, <strong>usar</strong> e <strong>aplicar</strong> na sua <strong>rotina</strong>. Se por <strong>qualquer motivo</strong> não ficar <strong>satisfeita</strong>, <strong>devolvemos</strong> cada <strong>centavo</strong> sem questionamentos.</p>
+    <button class="btn-cta mt16" onclick="checkout()">QUERO MEU CRONOGRAMA AGORA</button>
+  </div>
+  <div class="faq-section">
+    <p class="faq-ttl">Perguntas frequentes</p>
+    <div class="fi"><p class="fq">Como vou receber?</p><p class="fa">Assim que o pagamento for confirmado você recebe um e-mail com o link para baixar. Acesso imediato, qualquer hora do dia.</p></div>
+    <div class="fi"><p class="fq">Precisa de aplicativo ou login?</p><p class="fa">Não. É só baixar, imprimir (caso queira) e usar. Sem plataforma, sem senha, sem complicação.</p></div>
+    <div class="fi"><p class="fq">Funciona para qualquer tamanho de casa?</p><p class="fa">Sim. Você usa o que faz sentido pra sua realidade e ignora o que não se aplica.</p></div>
+    <div class="fi"><p class="fq">E se eu não tiver impressora?</p><p class="fa">Você pode usar pelo celular ou mandar imprimir em qualquer papelaria por poucos reais.</p></div>
+    <div class="fi"><p class="fq">Funciona para quem tem filhos e pet?</p><p class="fa">Sim. As tarefas são distribuídas ao longo da semana de forma leve para não virar um fardo, independente da sua rotina.</p></div>
+    <div class="fi"><p class="fq">É difícil de aplicar?</p><p class="fa">Não. Em menos de 5 minutos quem utilizar já saberá exatamente o que fazer e quando fazer em cada cômodo da sua casa.</p></div>
+  </div>
+  <div class="spacer"></div>
+</div></div>
+
+<!-- ══ FLUXO B ══ -->
+<div id="sb7" class="s quiz-s"><div class="qw"><h2 class="qt">Você sente que vive limpando e mesmo assim a casa nunca está "em ordem"?</h2><div class="opts">
+  <button class="opt" onclick="adv(this,'b8')"><span class="opt-e">🎯</span><span class="opt-t">Sim, é exatamente isso</span></button>
+  <button class="opt" onclick="adv(this,'b8')"><span class="opt-e">⏰</span><span class="opt-t">Às vezes sim, principalmente durante a semana</span></button>
+  <button class="opt" onclick="adv(this,'b8')"><span class="opt-e">💤</span><span class="opt-t">Só quando fico muito cansada</span></button>
+  <button class="opt" onclick="adv(this,'b8')"><span class="opt-e">💪</span><span class="opt-t">Não, dou conta da maioria das coisas</span></button>
+</div></div></div>
+
+<div id="sb8" class="s quiz-s"><div class="qw"><h2 class="qt">Você já deixou de descansar ou curtir algo por causa da limpeza acumulada?</h2><div class="opts">
+  <button class="opt" onclick="adv(this,'b9')"><span class="opt-e">😀</span><span class="opt-t">Sim, sempre</span></button>
+  <button class="opt" onclick="adv(this,'b9')"><span class="opt-e">🙂</span><span class="opt-t">Várias vezes</span></button>
+  <button class="opt" onclick="adv(this,'b9')"><span class="opt-e">🤔</span><span class="opt-t">Às vezes sim</span></button>
+  <button class="opt" onclick="adv(this,'b9')"><span class="opt-e">😐</span><span class="opt-t">Nunca</span></button>
+</div></div></div>
+
+<div id="sb9" class="s quiz-s"><div class="qw"><h2 class="qt">Como a sobrecarga de cuidar da casa o tempo todo tem te afetado no dia a dia?</h2><div class="opts">
+  <button class="opt" onclick="adv(this,'b10')"><span class="opt-e">😩</span><span class="opt-t">Me sinto exausta mentalmente, ansiosa e com a sensação de estar sempre falhando</span></button>
+  <button class="opt" onclick="adv(this,'b10')"><span class="opt-e">😠</span><span class="opt-t">Vivo irritada, me incomodo com tudo e acabo descontando nas pessoas</span></button>
+  <button class="opt" onclick="adv(this,'b10')"><span class="opt-e">🧹</span><span class="opt-t">Mal tenho tempo pra mim só limpo, limpo, limpo…</span></button>
+  <button class="opt" onclick="adv(this,'b10')"><span class="opt-e">😐</span><span class="opt-t">É só um incômodo leve, mas às vezes pesa</span></button>
+</div></div></div>
+
+<div id="sb10" class="s quiz-s"><div class="qw">
+  <h2 class="qt">O que você faria se tivesse 1 hora livre a mais por dia por não precisar pensar na faxina?</h2>
+  <p class="qs">Pode marcar mais de uma opção</p>
+  <div class="opts" id="b10o">
+    <button class="opt" onclick="tm(this)"><span class="opt-e">😴</span><span class="opt-t">Dormiria ou descansaria</span><span class="ck"></span></button>
+    <button class="opt" onclick="tm(this)"><span class="opt-e">🧸</span><span class="opt-t">Brincaria com meus filhos</span><span class="ck"></span></button>
+    <button class="opt" onclick="tm(this)"><span class="opt-e">💪</span><span class="opt-t">Faria algo pra mim (estudar, treinar, cuidar de mim)</span><span class="ck"></span></button>
+    <button class="opt" onclick="tm(this)"><span class="opt-e">📋</span><span class="opt-t">Organizaria outras áreas da vida</span><span class="ck"></span></button>
+  </div>
+  <button class="btn-cont" id="b10btn" onclick="go('b11')">Selecionar e continuar</button>
+</div></div>
+
+<div id="sb11" class="s quiz-s"><div class="qw">
+  <h2 class="qt" style="font-size:17px;line-height:1.45">Se existisse um cronograma prático, adaptado à sua realidade, que te ajudasse a manter a casa limpa com menos esforço e sem precisar ficar lembrando e limpando tudo o tempo todo</h2>
+  <p class="qs">Você toparia seguir um passo a passo pra colocar isso em prática ainda essa semana?</p>
+  <div class="opts">
+    <button class="opt" onclick="adv(this,'b12')"><span class="opt-e">✅</span><span class="opt-t">Sim, é exatamente o que eu preciso!</span></button>
+    <button class="opt" onclick="adv(this,'b12')"><span class="opt-e">😍</span><span class="opt-t">Claro! Preciso de algo objetivo</span></button>
+  </div>
+</div></div>
+
+<!-- B LOADING -->
+<div id="sb12" class="s"><div class="lw">
+  <div class="lhead"><span class="ltitle">Aguarde...</span><span class="lpct" id="pctB">0%</span></div>
+  <div class="ltrack"><div class="lfill" id="fillB"></div></div>
+  <p class="lsub">Nossa Gestora de Rotina está analisando suas respostas.</p>
+  <div class="ltests">
+    <img src="https://i.ibb.co/wrKT633S/02.png" alt="" loading="lazy" onerror="this.style.display='none'">
+    <img src="https://i.ibb.co/zWxhGDBV/03.png" alt="" loading="lazy" onerror="this.style.display='none'">
+  </div>
+</div></div>
+
+<!-- B RESULTADO -->
+<div id="sb13" class="s"><div class="rw">
+  <p class="rbadge">📋 AQUI ESTÁ O SEU RESULTADO:</p>
+  <p class="rlead">Você <strong>cuida</strong> da sua <strong>casa</strong> mas ela <strong>nunca</strong> parece <strong>limpa</strong> do jeito que <strong>você quer</strong>...</p>
+  <img src="https://i.ibb.co/kgmNqjV2/Normal.jpg" alt="" class="rimg" loading="lazy" onerror="this.style.display='none'">
+  <div class="rbox">Você se esforça. Limpa num dia, no outro já parece que não fez nada... A sensação de que a casa nunca está realmente do jeito que você gosta não passa.</div>
+  <p style="font-size:14px;margin-bottom:10px;line-height:1.6"><strong>Não é preguiça. Não é falta de vontade.</strong> É falta de um sistema claro pra seguir.</p>
+  <p style="font-size:14px;margin-bottom:10px;line-height:1.6;font-weight:600">Você não precisa de mais esforço. Precisa de direção.</p>
+  <p style="font-size:14px;margin-bottom:16px;line-height:1.6;color:#4B5563">Sem saber exatamente o que fazer e quando fazer, a limpeza vira uma coisa que pesa na cabeça o tempo todo — e mesmo depois de limpar, bate aquela sensação de que ainda falta algo.</p>
+  <h3 class="rculpa">A culpa não é sua. É do improviso.</h3>
+  <ul class="rul">
+    <li><span>😢</span><span>Você limpa tudo num dia e <strong>no outro já está igual</strong>;</span></li>
+    <li><span>😤</span><span>Sempre tem aquele cantinho que <strong>ninguém lembra de limpar</strong>;</span></li>
+    <li><span>😩</span><span>Você carrega a lista de tarefas <strong>só na cabeça</strong> e nunca faz tudo;</span></li>
+  </ul>
+  <p class="rcta">Mas tem uma solução simples. E você consegue aplicar ainda essa semana...</p>
+  <button class="btn-cta" onclick="go('b14')">👉 Quero ver a solução</button>
+</div></div>
+
+<!-- B VENDAS -->
+<div id="sb14" class="s"><div class="sw">
+  <div class="shero">
+    <div class="shero-badge">✨ +6.400 famílias transformadas</div>
+    <p class="shero-sup">CONHEÇA O</p>
+    <h1 class="shero-title">Cronograma <span class="gold">Casa Impecável</span></h1>
+    <div class="shero-div"></div>
+    <p class="shero-sub">O <strong>sistema definitivo</strong> para você <strong>acabar</strong> de uma vez com a sensação de que sua casa nunca está realmente limpa, mesmo depois de você se <strong>matar de limpar</strong>.</p>
+    <div class="vcard" id="vidB"></div>
+    <div class="shero-pills">
+      <span class="shero-pill">✅ Sem acumular</span>
+      <span class="shero-pill">✅ Sem improviso</span>
+      <span class="shero-pill">✅ Casa sempre limpa</span>
+    </div>
+  </div>
+  <div class="bcard">
+    <p class="bcard-title">Um material prático que organiza cada tarefa da sua casa por dia, cômodo e frequência. Cola na geladeira e pronto...</p>
+    <ul class="bens">
+      <li><span class="chk">✅</span><span>Você <strong>nunca mais</strong> vai abrir o olho na segunda-feira sem saber por onde <strong>começar</strong>;</span></li>
+      <li><span class="chk">✅</span><span>Para de <strong>acumular tudo</strong> para um dia só e passar horas no <strong>esgotamento total</strong>;</span></li>
+      <li><span class="chk">✅</span><span>A casa <strong>nunca mais</strong> vai parecer suja 2 dias depois de você ter limpado;</span></li>
+      <li><span class="chk">✅</span><span>Cada cômodo <strong>finalmente</strong> fica do jeito que você sempre imaginou;</span></li>
+      <li><span class="chk">✅</span><span>Você <strong>descansa de verdade</strong> sabendo que tudo já está do seu <strong>jeitinho</strong>;</span></li>
+    </ul>
+  </div>
+  <div class="shdr shdr-purple"><h2>QUEM <span class="gold">APLICOU</span> SENTIU A DIFERENÇA...</h2></div>
+  <div class="sp-section">
+    <p class="sp-count">Já são mais de <strong>6.400 famílias</strong> que utilizam o <strong>Cronograma Casa Impecável</strong> e a <strong>sua</strong> pode ser a <strong>próxima</strong>.</p>
+    <div class="tests">
+      <img src="https://i.ibb.co/1Yjnqv0R/06.png" alt="" loading="lazy" onerror="this.style.display='none'">
+      <img src="https://i.ibb.co/pBbMRSQk/INSTA-03-SOZINHA.png" alt="" loading="lazy" onerror="this.style.display='none'">
+      <img src="https://i.ibb.co/fV68zpx7/05.png" alt="" loading="lazy" onerror="this.style.display='none'">
+      <img src="https://i.ibb.co/RnbcwrX/INSTA-04-SOZINHA.png" alt="" loading="lazy" onerror="this.style.display='none'">
+    </div>
+  </div>
+  <div class="shdr shdr-dark"><h2>O QUE VOCÊ VAI <span class="gold">RECEBER:</span></h2></div>
+  <div class="rcv-section">
+    <p class="rcv-intro">O <strong>Cronograma Casa Impecável</strong> conta com <strong>cronogramas</strong> e <strong>checklists prontos</strong> para <strong>baixar</strong>, <strong>imprimir</strong> e usar ainda <strong>hoje</strong>...</p>
+    <div class="rcv"><p class="rcv-t">📅 Cronograma de Limpeza Diária, Semanal e Mensal</p><p class="rcv-d">Você abre os olhos e já sabe exatamente o que fazer naquele dia. Acabou a paralisia de "por onde começo?".</p></div>
+    <div class="rcv"><p class="rcv-t">🔍 Cronograma de Limpezas Escondidas</p><p class="rcv-d">Aqueles detalhes que ficam te incomodando sem você nem perceber, rejunte, borracha da geladeira, ralo, rodapé. Tudo mapeado.</p></div>
+    <div class="rcv"><p class="rcv-t">🏠 Cronograma por Cômodo</p><p class="rcv-d">Cada ambiente com sua sequência exata: o que limpar primeiro, o que vem depois e com qual frequência. Zero improviso.</p></div>
+    <div class="rcv"><p class="rcv-t">✏️ Cronograma Personalizável do seu Jeito</p><p class="rcv-d">Adapte para a sua casa, no seu ritmo, na sua rotina, sem nada genérico.</p></div>
+    <div class="rcv"><p class="rcv-t">🛒 Lista de Compras de Materiais de Limpeza Editável</p><p class="rcv-d">Nunca mais começar a limpeza e descobrir que acabou o produto.</p></div>
+  </div>
+  <div class="shdr shdr-bonus"><h2>ADQUIRINDO <span class="gold">AGORA</span> VOCÊ LEVA <span class="gold">+4 BÔNUS EXCLUSIVOS:</span></h2></div>
+  <div class="boncard"><img src="https://i.ibb.co/r2r3SpDf/Casa-Inteligente-Econ-mica.jpg" class="boncard-img" alt="" loading="lazy" onerror="this.style.display='none'"><div class="boncard-body"><p class="bon-name">Bônus 01 — Casa Inteligente Econômica</p><p class="bon-desc">Os equipamentos de limpeza que transformam uma faxina de 2 horas em uma de 30 minutos...</p><p class="bon-price"><span class="old">R$69,90</span><span class="free">GRÁTIS</span></p></div></div>
+  <div class="boncard"><img src="https://i.ibb.co/ZRFZqrn6/Card-pio-Semanal-da-Fam-lia.jpg" class="boncard-img" alt="" loading="lazy" onerror="this.style.display='none'"><div class="boncard-body"><p class="bon-name">Bônus 02 — Cardápio Semanal da Família</p><p class="bon-desc">A semana inteira planejada, a família satisfeita e sua cabeça livre de uma preocupação a menos...</p><p class="bon-price"><span class="old">R$59,90</span><span class="free">GRÁTIS</span></p></div></div>
+  <div class="boncard"><img src="https://i.ibb.co/k66fKzfk/101-Hacks-da-Casa-Limpa.jpg" class="boncard-img" alt="" loading="lazy" onerror="this.style.display='none'"><div class="boncard-body"><p class="bon-name">Bônus 03 — 101 Hacks da Casa Limpa</p><p class="bon-desc">50 truques com bicarbonato e 51 com vinagre que vão transformar a higiene de cada cantinho da sua casa...</p><p class="bon-price"><span class="old">R$22,90</span><span class="free">GRÁTIS</span></p></div></div>
+  <div class="boncard"><img src="https://i.ibb.co/0j09Zdhg/F-rmula-Secreta-do-Lar-Perfumado.jpg" class="boncard-img" alt="" loading="lazy" onerror="this.style.display='none'"><div class="boncard-body"><p class="bon-name">Bônus 04 — Fórmula Secreta do Lar Perfumado</p><p class="bon-desc">Receitas exclusivas dos melhores aromatizadores artesanais que deixam cada cômodo com um cheiro incrível...</p><p class="bon-price"><span class="old">R$44,99</span><span class="free">GRÁTIS</span></p></div></div>
+  <div class="obox">
+    <div class="obox-top"><h3>Garanta o Cronograma <span class="gold">Casa Impecável</span></h3><p>Transforme de uma vez por toda a forma como sua casa se mantem limpa e arrumada.</p></div>
+    <div class="obox-body">
+      <img src="https://i.ibb.co/WWNb670g/Capa-faz-tudo-sozinha.webp" class="mockup" alt="" loading="lazy" onerror="this.style.display='none'">
+      <ul class="plist">
+        <li><span class="pname">Cronograma Casa Impecável</span><span class="pold">R$ 97,00</span></li>
+        <li><span class="pname">Bônus 01 — Casa Inteligente Econômica</span><span class="pold">R$ 69,90</span></li>
+        <li><span class="pname">Bônus 02 — Cardápio Semanal da Família</span><span class="pold">R$ 59,90</span></li>
+        <li><span class="pname">Bônus 03 — 101 Hacks da Casa Limpa</span><span class="pold">R$ 22,90</span></li>
+        <li><span class="pname">Bônus 04 — Fórmula Secreta do Lar Perfumado</span><span class="pold">R$ 44,99</span></li>
+      </ul>
+      <div class="obox-price">
+        <p class="de">De R$ 294,69</p><p class="por">Por apenas</p>
+        <p class="pmain">R$27</p>
+        <p class="psave">✦ Você economiza R$ 267,69</p>
+      </div>
+      <div class="timer">⚠️ Essa oferta irá expirar em: <span class="tnum" id="timerB">16:00</span></div>
+      <button class="btn-cta" onclick="checkout()">QUERO MEU CRONOGRAMA AGORA</button>
+      <p class="ptrust">🔒 Pagamento seguro · 7 dias de garantia</p>
+    </div>
+  </div>
+  <div class="expert">
+    <h2>QUEM ESTÁ POR TRÁS DO <span class="gold">CRONOGRAMA CASA IMPECÁVEL?</span></h2>
+    <img src="https://i.ibb.co/zTHgBGVN/Expert-faz-tudo-sozinha.webp" alt="" loading="lazy" onerror="this.style.display='none'">
+    <p class="ename">Sobre Laura Bittencourt:</p>
+    <p>Eu sou mãe, tenho casa pra cuidar e trabalho. Por muito tempo senti que não importava o quanto eu me esforçasse, a casa nunca ficava do jeito que eu queria.</p>
+    <p>Eu não criei o Cronograma Casa Impecável numa mesa de escritório. Criei dentro de casa, num dia que eu passei o sábado inteiro limpando e na segunda-feira a casa já parecia que eu não tinha feito nada. De novo. Pela centésima vez.</p>
+    <p>Naquele dia eu entendi: o problema não era eu. Era tentar manter uma casa funcionando sem ter um sistema de verdade.</p>
+    <p>Passei meses testando, ajustando, refazendo, até criar uma rotina tão clara que cada dia eu sabia exatamente o que fazer. Sem carregar tudo na cabeça. Sem me esgotar.</p>
+    <p>Hoje já transformei a rotina de mais de 6.400 famílias que viviam exatamente o que você vive agora. Você não está cansada porque é desorganizada — está cansada porque nunca teve um sistema feito pra sua realidade.</p>
+    <button class="btn-cta mt16" onclick="checkout()">QUERO MEU CRONOGRAMA AGORA</button>
+  </div>
+  <div class="guar">
+    <h2 class="gt">GARANTIA INCONDICIONAL<br>DE <span class="gdays">07 DIAS</span></h2>
+    <img src="https://i.ibb.co/xtKCYPYk/Selo-garantia.png" class="gseal" alt="" loading="lazy" onerror="this.style.display='none'">
+    <p class="gtxt">Tenho tanta <strong>certeza</strong> que o <strong>Cronograma Casa Impecável</strong> vai <strong>funcionar</strong> na sua <strong>casa</strong> que o <strong>risco</strong> fica todo comigo. Você tem <strong>7 dias</strong> para <strong>testar</strong>, <strong>imprimir</strong>, <strong>usar</strong> e <strong>aplicar</strong> na sua <strong>rotina</strong>. Se por <strong>qualquer motivo</strong> não ficar <strong>satisfeita</strong>, <strong>devolvo</strong> cada <strong>centavo</strong> sem questionamentos.</p>
+    <button class="btn-cta mt16" onclick="checkout()">QUERO MEU CRONOGRAMA AGORA</button>
+  </div>
+  <div class="faq-section">
+    <p class="faq-ttl">Perguntas frequentes</p>
+    <div class="fi"><p class="fq">Como vou receber?</p><p class="fa">Assim que o pagamento for confirmado você recebe um e-mail com o link para baixar. Acesso imediato, qualquer hora do dia.</p></div>
+    <div class="fi"><p class="fq">Precisa de aplicativo ou login?</p><p class="fa">Não. É só baixar, imprimir (caso queira) e usar. Sem plataforma, sem senha, sem complicação.</p></div>
+    <div class="fi"><p class="fq">Funciona para qualquer tamanho de casa?</p><p class="fa">Sim. Você usa o que faz sentido pra sua realidade e ignora o que não se aplica.</p></div>
+    <div class="fi"><p class="fq">E se eu não tiver impressora?</p><p class="fa">Você pode usar pelo celular ou mandar imprimir em qualquer papelaria por poucos reais.</p></div>
+    <div class="fi"><p class="fq">Funciona para quem tem filhos e pet?</p><p class="fa">Sim. As tarefas são distribuídas ao longo da semana de forma leve, independente da sua rotina.</p></div>
+    <div class="fi"><p class="fq">É difícil de aplicar?</p><p class="fa">Não. Em menos de 5 minutos quem utilizar já saberá exatamente o que fazer e quando fazer em cada cômodo da sua casa.</p></div>
+  </div>
+  <div class="spacer"></div>
+</div></div>
+
+<script>
+var cur='0',vidAL=false,vidBL=false,flow='A';
+var PM={'0':0,'1':13,'2':23,'3':32,'4':40,'5':47,'6':53,'7':59,'a8':63,'a9':67,'a10':70,'a11':73,'a12':76,'a13':79,'a14':82,'a15':86,'a16':90,'a17':95,'a18':100,'b7':64,'b8':70,'b9':76,'b10':82,'b11':87,'b12':92,'b13':97,'b14':100};
+var HIDE_HDR={'0':1,'a16':1,'a17':1,'a18':1,'b12':1,'b13':1,'b14':1};
+
+function go(step){
+  var p=document.getElementById('s'+cur);
+  if(p) p.classList.remove('on');
+  cur=String(step);
+  var n=document.getElementById('s'+cur);
+  if(n){n.classList.add('on');window.scrollTo(0,0);}
+  var hdr=document.getElementById('qhdr');
+  if(HIDE_HDR[cur]){hdr.classList.remove('on');}
+  else{hdr.classList.add('on');document.getElementById('qhdr-fill').style.width=(PM[cur]||0)+'%';}
+  if(cur==='a18'&&!vidAL){vidAL=true;injectVid('vidA','6a0f57efcc4b4ae42d5901e5');}
+  if(cur==='b14'&&!vidBL){vidBL=true;injectVid('vidB','6a0f3a0578d98568edbb1202');}
+  if(cur==='a16') load('A');
+  if(cur==='b12') load('B');
+}
+
+function injectVid(cId,vId){
+  var c=document.getElementById(cId);
+  c.innerHTML='<vturb-smartplayer id="vid-'+vId+'" style="display:block;margin:0 auto;width:100%;max-width:400px"></vturb-smartplayer>';
+  var sc=document.createElement('script');
+  sc.src='https://scripts.converteai.net/2f0cc460-c501-43d5-a605-6eee67037a68/players/'+vId+'/v4/player.js';
+  sc.async=true;
+  document.head.appendChild(sc);
+}
+
+function adv(btn,next){
+  btn.classList.add('sel');
+  requestAnimationFrame(function(){requestAnimationFrame(function(){go(next);});});
+}
+function br(type,btn,next){
+  flow=type;
+  btn.classList.add('sel');
+  requestAnimationFrame(function(){requestAnimationFrame(function(){go(next);});});
+}
+function checkout(){
+  window.location.href=flow==='A'
+    ?'https://indec-digital.mycartpanda.com/checkout/210517224:1'
+    :'https://indec-digital.mycartpanda.com/checkout/210659469:1';
+}
+function tm(btn){
+  btn.classList.toggle('sel');
+  document.getElementById('b10btn').classList.toggle('on',document.querySelectorAll('#b10o .sel').length>0);
+}
+function load(t){
+  var fill=document.getElementById('fill'+t),pctEl=document.getElementById('pct'+t),next=t==='A'?'a17':'b13';
+  fill.style.width='0%';pctEl.textContent='0%';
+  var n=0,iv=setInterval(function(){n++;fill.style.width=n+'%';pctEl.textContent=n+'%';if(n>=100){clearInterval(iv);setTimeout(function(){go(next);},300);}},100);
+}
+function startTimer(id){
+  var el=document.getElementById(id);if(!el)return;
+  var r=960;(function t(){if(r<0){el.textContent='00:00';return;}var m=Math.floor(r/60),s=r%60;el.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;r--;setTimeout(t,1000);})();
+}
+startTimer('timerA');startTimer('timerB');
+</script>
+</body>
+</html>
