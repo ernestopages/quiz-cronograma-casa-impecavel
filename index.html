@@ -682,6 +682,7 @@ function track(step,action,answer){try{_SB.from('quiz_events').insert({session_i
 var cur='0',vidAL=false,vidBL=false,flow='A';
 var PM={'0':0,'1':13,'2':23,'3':32,'4':40,'5':47,'6':53,'7':59,'a8':63,'a9':67,'a10':70,'a11':73,'a12':76,'a13':79,'a14':82,'a15':86,'a16':90,'a17':95,'a18':100,'b7':64,'b8':70,'b9':76,'b10':82,'b11':87,'b12':92,'b13':97,'b14':100};
 var HIDE_HDR={'0':1,'a16':1,'a17':1,'a18':1,'b12':1,'b13':1,'b14':1};
+setTimeout(()=>track('0','view'),100);
 
 function go(step){
   var p=document.getElementById('s'+cur);
