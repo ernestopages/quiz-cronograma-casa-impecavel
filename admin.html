@@ -324,8 +324,10 @@ async function loadData(){
     .order('created_at',{ascending:true});
 
   if(error||!data){
+    console.error('Supabase Error:',error);
+    const errMsg=error?.message||'Erro desconhecido';
     document.getElementById('loadingState').innerHTML=
-      '<div class="empty"><div class="empty-icon">⚠️</div><p>Erro ao carregar dados.<br>Verifique se a tabela foi criada no Supabase.</p></div>';
+      `<div class="empty"><div class="empty-icon">⚠️</div><p>Erro ao carregar dados.<br><code style="font-size:11px;color:#666">${errMsg}</code></p></div>`;
     return;
   }
 
