@@ -675,7 +675,7 @@ html,body{font-family:'Poppins',sans-serif;background:#F7F4FD;color:#1a1a2e;over
 
 <script>
 // ── SUPABASE TRACKING ──
-const _SB=supabase.createClient('https://auxjrxzdvbijhieyhphq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1eGpyeHpkdmJpamhpZXloaHBocSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzgwMDc3NjU1LCJleHAiOjIwOTU2NTM2NTF9.FsuUl87YpOp9CC48fWFvQg49oOvLiEQ7PbWfpTGK5Mw');
+const _SB=supabase.createClient('https://auxjrxzdvbijhieyhphq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1eGpyeHpkdmJpamhpZXlocGhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNzc2NTEsImV4cCI6MjA5NTY1MzY1MX0.FsuUl87YpOp9CC48fWFvQg49oOvLiEQ7PbWfpTGK5Mw');
 const _SID=(()=>{let id=sessionStorage.getItem('_qsid');if(!id){id=crypto.randomUUID?crypto.randomUUID():(Math.random().toString(36).slice(2)+Date.now().toString(36));sessionStorage.setItem('_qsid',id);}return id;})();
 function track(step,action,answer){try{_SB.from('quiz_events').insert({session_id:_SID,step:String(step),action:action,answer:answer||null,branch:flow||null,user_agent:navigator.userAgent.slice(0,150)}).then();}catch(e){}}
 
