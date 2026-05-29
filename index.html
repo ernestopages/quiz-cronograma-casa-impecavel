@@ -221,6 +221,7 @@ html,body{font-family:'Poppins',sans-serif;background:#F7F4FD;color:#1a1a2e;over
   async
   defer
 ></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 
@@ -673,6 +674,11 @@ html,body{font-family:'Poppins',sans-serif;background:#F7F4FD;color:#1a1a2e;over
 </div></div>
 
 <script>
+// ── SUPABASE TRACKING ──
+const _SB=supabase.createClient('https://auxjrxzdvbijhieyhphq.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1eGpyeHpkdmJpamhpZXloaHBocSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzgwMDc3NjU1LCJleHAiOjIwOTU2NTM2NTF9.FsuUl87YpOp9CC48fWFvQg49oOvLiEQ7PbWfpTGK5Mw');
+const _SID=(()=>{let id=sessionStorage.getItem('_qsid');if(!id){id=crypto.randomUUID?crypto.randomUUID():(Math.random().toString(36).slice(2)+Date.now().toString(36));sessionStorage.setItem('_qsid',id);}return id;})();
+function track(step,action,answer){try{_SB.from('quiz_events').insert({session_id:_SID,step:String(step),action:action,answer:answer||null,branch:flow||null,user_agent:navigator.userAgent.slice(0,150)}).then();}catch(e){}}
+
 var cur='0',vidAL=false,vidBL=false,flow='A';
 var PM={'0':0,'1':13,'2':23,'3':32,'4':40,'5':47,'6':53,'7':59,'a8':63,'a9':67,'a10':70,'a11':73,'a12':76,'a13':79,'a14':82,'a15':86,'a16':90,'a17':95,'a18':100,'b7':64,'b8':70,'b9':76,'b10':82,'b11':87,'b12':92,'b13':97,'b14':100};
 var HIDE_HDR={'0':1,'a16':1,'a17':1,'a18':1,'b12':1,'b13':1,'b14':1};
@@ -681,6 +687,7 @@ function go(step){
   var p=document.getElementById('s'+cur);
   if(p) p.classList.remove('on');
   cur=String(step);
+  track(cur,'view');
   var n=document.getElementById('s'+cur);
   if(n){n.classList.add('on');window.scrollTo(0,0);}
   var hdr=document.getElementById('qhdr');
@@ -702,11 +709,15 @@ function injectVid(cId,vId){
 }
 
 function adv(btn,next){
+  var ans=(btn.querySelector('.opt-t')||{}).textContent||'';
+  track(cur,'answer',ans.trim());
   btn.classList.add('sel');
   requestAnimationFrame(function(){requestAnimationFrame(function(){go(next);});});
 }
 function br(type,btn,next){
   flow=type;
+  var ans=(btn.querySelector('.opt-t')||{}).textContent||'';
+  track(cur,'answer',ans.trim()+' [branch:'+type+']');
   btn.classList.add('sel');
   requestAnimationFrame(function(){requestAnimationFrame(function(){go(next);});});
 }

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin — Quiz Casa Impecável</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Poppins',sans-serif;background:#F1F5F9;color:#1E293B;font-size:14px}
+
+/* ── AUTH OVERLAY ── */
+#authOverlay{position:fixed;inset:0;background:#3B0764;display:flex;align-items:center;justify-content:center;z-index:9999}
+.auth-box{background:#fff;border-radius:20px;padding:36px 32px;text-align:center;width:320px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.auth-box h2{font-size:18px;font-weight:700;color:#3B0764;margin-bottom:6px}
+.auth-box p{font-size:13px;color:#64748B;margin-bottom:20px}
+.auth-input{width:100%;padding:12px 14px;border:2px solid #EDE9FE;border-radius:10px;font-family:'Poppins',sans-serif;font-size:14px;outline:none;margin-bottom:12px;transition:border .15s}
+.auth-input:focus{border-color:#8B5CF6}
+.auth-btn{width:100%;padding:13px;background:linear-gradient(135deg,#7C3AED,#5B21B6);color:#fff;border:none;border-radius:10px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer}
+.auth-err{color:#EF4444;font-size:12px;margin-top:6px;display:none}
+
+/* ── TOP BAR ── */
+.topbar{background:#3B0764;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+.topbar-brand{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700}
+.filters{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.fbtn{padding:6px 14px;border-radius:99px;border:1.5px solid rgba(255,255,255,.3);background:transparent;color:rgba(255,255,255,.8);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.fbtn:hover{background:rgba(255,255,255,.1)}
+.fbtn.active{background:#fff;color:#3B0764;border-color:#fff}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.refresh-btn{padding:6px 14px;border-radius:99px;border:1.5px solid rgba(255,255,255,.3);background:transparent;color:rgba(255,255,255,.8);font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer}
+.refresh-btn:hover{background:rgba(255,255,255,.1)}
+.current-date{font-size:12px;opacity:.6}
+
+/* ── MAIN ── */
+.main{padding:22px 24px;max-width:1280px;margin:0 auto}
+
+/* ── LOADING STATE ── */
+#loadingState{text-align:center;padding:60px 20px;color:#64748B}
+.spinner{width:36px;height:36px;border:3px solid #EDE9FE;border-top-color:#7C3AED;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── KPI CARDS ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 1px 6px rgba(0,0,0,.07)}
+.kpi-lbl{font-size:11.5px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.kpi-val{font-size:34px;font-weight:800;line-height:1;margin-bottom:4px}
+.kpi-sub{font-size:12px;font-weight:500}
+.c-purple{color:#7C3AED}.c-green{color:#16A34A}.c-blue{color:#2563EB}.c-orange{color:#D97706}
+.kpi-sub.up{color:#16A34A}.kpi-sub.neutral{color:#64748B}
+
+/* ── SECTION TITLE ── */
+.sec-title{font-size:15px;font-weight:700;color:#1E293B;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.sec-badge{font-size:11px;font-weight:600;color:#64748B;background:#F1F5F9;padding:3px 9px;border-radius:99px}
+
+/* ── TWO COL ── */
+.two-col{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:20px}
+@media(max-width:900px){.two-col{grid-template-columns:1fr}}
+
+/* ── CARD ── */
+.card{background:#fff;border-radius:14px;padding:20px 22px;box-shadow:0 1px 6px rgba(0,0,0,.07)}
+
+/* ── FUNNEL ── */
+.funnel-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.funnel-lbl{font-size:12px;font-weight:500;color:#475569;width:190px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.funnel-bar-bg{flex:1;height:22px;background:#F1F5F9;border-radius:6px;overflow:hidden}
+.funnel-bar{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:700;color:#fff;white-space:nowrap;transition:width .5s ease}
+.funnel-count{font-size:12px;font-weight:600;color:#1E293B;width:38px;text-align:right;flex-shrink:0}
+.funnel-pct{font-size:11px;font-weight:500;color:#94A3B8;width:34px;text-align:right;flex-shrink:0}
+.fb-purple{background:linear-gradient(90deg,#7C3AED,#A78BFA)}
+.fb-violet{background:linear-gradient(90deg,#6D28D9,#8B5CF6)}
+.fb-green{background:linear-gradient(90deg,#16A34A,#4ADE80)}
+.fb-teal{background:linear-gradient(90deg,#0D9488,#2DD4BF)}
+.funnel-divider{height:1px;background:#F1F5F9;margin:8px 0}
+.funnel-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.badge-a{background:#EDE9FE;color:#6D28D9}
+.badge-b{background:#D1FAE5;color:#065F46}
+
+/* ── BREAKDOWN ── */
+.breakdown-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9}
+.breakdown-item:last-child{border-bottom:none}
+.breakdown-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.breakdown-lbl{flex:1;font-size:13px;font-weight:500;color:#374151}
+.breakdown-bar-bg{width:80px;height:7px;background:#F1F5F9;border-radius:99px;overflow:hidden}
+.breakdown-bar{height:100%;border-radius:99px;transition:width .5s ease}
+.breakdown-val{font-size:13px;font-weight:700;color:#1E293B;width:30px;text-align:right}
+.breakdown-pct{font-size:11.5px;color:#94A3B8;width:38px;text-align:right}
+
+.drop-list{margin-top:4px}
+.drop-item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:8px}
+.drop-item:hover{background:#F8FAFC}
+.drop-step{font-size:12.5px;font-weight:500;color:#475569}
+.drop-val{font-size:13px;font-weight:700}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 14px;text-align:left;font-size:11.5px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.5px;background:#F8FAFC;border-bottom:2px solid #E2E8F0}
+thead th:first-child{border-radius:8px 0 0 8px}
+thead th:last-child{border-radius:0 8px 8px 0}
+tbody tr{border-bottom:1px solid #F1F5F9;transition:background .1s;cursor:pointer}
+tbody tr:hover{background:#F8FAFC}
+tbody tr.expanded{background:#F5F0FF}
+tbody td{padding:12px 14px;font-size:13px;vertical-align:middle}
+.detail-row{display:none;background:#FAF8FF}
+.detail-row.open{display:table-row}
+.detail-cell{padding:16px 18px;border-bottom:2px solid #EDE9FE}
+
+.badge-step{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap}
+.bs-venda{background:#D1FAE5;color:#065F46}
+.bs-result{background:#EDE9FE;color:#5B21B6}
+.bs-quiz{background:#FEF3C7;color:#92400E}
+.bs-saiu{background:#FEE2E2;color:#991B1B}
+
+.badge-flow{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700}
+.bf-a{background:#EDE9FE;color:#6D28D9}
+.bf-b{background:#D1FAE5;color:#065F46}
+.bf-n{background:#F1F5F9;color:#64748B}
+
+.btn-detail{background:#EDE9FE;border:none;color:#6D28D9;font-family:'Poppins',sans-serif;font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:8px;cursor:pointer}
+.btn-detail:hover{background:#DDD6FE}
+
+/* ── JOURNEY ── */
+.journey{display:flex;flex-wrap:wrap;gap:5px;padding:4px 0}
+.j-step{background:#fff;border:1px solid #DDD6FE;border-radius:99px;padding:4px 11px;font-size:11.5px;font-weight:500;color:#5B21B6}
+.j-step.j-last{background:#6D28D9;color:#fff;border-color:#6D28D9}
+.j-arrow{color:#CBD5E1;font-size:12px;align-self:center}
+.detail-answers{margin-top:12px;display:flex;flex-direction:column;gap:5px}
+.ans-row{display:flex;gap:10px;align-items:flex-start;padding:7px 10px;background:#fff;border-radius:8px;border:1px solid #EDE9FE}
+.ans-q{font-size:12px;font-weight:600;color:#5B21B6;min-width:120px;flex-shrink:0}
+.ans-a{font-size:12px;color:#374151}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:40px 20px;color:#94A3B8}
+.empty-icon{font-size:36px;margin-bottom:8px}
+
+/* ── PAGINATION ── */
+.pagination{display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:8px}
+.page-info{font-size:12.5px;color:#64748B}
+.page-btns{display:flex;gap:4px}
+.pbtn{padding:5px 11px;border:1.5px solid #E2E8F0;background:#fff;border-radius:8px;font-size:12.5px;font-weight:600;color:#475569;cursor:pointer;font-family:'Poppins',sans-serif}
+.pbtn.active{background:#7C3AED;border-color:#7C3AED;color:#fff}
+.pbtn:disabled{opacity:.4;cursor:not-allowed}
+</style>
+</head>
+<body>
+
+<!-- AUTH OVERLAY -->
+<div id="authOverlay">
+  <div class="auth-box">
+    <div style="font-size:36px;margin-bottom:12px">🏠</div>
+    <h2>Painel Admin</h2>
+    <p>Quiz Cronograma Casa Impecável</p>
+    <input type="password" class="auth-input" id="authInput" placeholder="Senha de acesso" onkeydown="if(event.key==='Enter')doAuth()">
+    <button class="auth-btn" onclick="doAuth()">Entrar</button>
+    <div class="auth-err" id="authErr">Senha incorreta</div>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-brand">🏠 <span>Admin — Quiz Casa Impecável</span></div>
+  <div class="filters">
+    <button class="fbtn active" onclick="setFilter('hoje',this)">Hoje</button>
+    <button class="fbtn" onclick="setFilter('7dias',this)">7 dias</button>
+    <button class="fbtn" onclick="setFilter('30dias',this)">30 dias</button>
+  </div>
+  <div class="topbar-right">
+    <span class="current-date" id="dateLabel"></span>
+    <button class="refresh-btn" onclick="loadData()">↻ Atualizar</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- LOADING -->
+  <div id="loadingState">
+    <div class="spinner"></div>
+    <p>Carregando dados...</p>
+  </div>
+
+  <!-- DASHBOARD (hidden until loaded) -->
+  <div id="dashboard" style="display:none">
+
+    <!-- KPI CARDS -->
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-lbl">Acessos totais</div>
+        <div class="kpi-val c-purple" id="kTotal">—</div>
+        <div class="kpi-sub neutral" id="kTotalSub">sessões únicas</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">Chegaram ao resultado</div>
+        <div class="kpi-val c-blue" id="kResult">—</div>
+        <div class="kpi-sub up" id="kResultSub">—</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">Chegaram à venda</div>
+        <div class="kpi-val c-green" id="kVenda">—</div>
+        <div class="kpi-sub up" id="kVendaSub">—</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">Fluxo A vs B</div>
+        <div class="kpi-val c-orange" id="kFluxo">—</div>
+        <div class="kpi-sub neutral">diarista / sozinha</div>
+      </div>
+    </div>
+
+    <!-- FUNNEL + BREAKDOWN -->
+    <div class="two-col">
+      <div class="card">
+        <div class="sec-title">Funil de Etapas <span class="sec-badge" id="funnelBadge">—</span></div>
+        <div id="funnelContent"></div>
+      </div>
+      <div class="card">
+        <div class="sec-title">Divisão dos Fluxos</div>
+        <div id="breakdownContent"></div>
+        <div class="sec-title" style="margin-top:20px;margin-bottom:8px">Maiores pontos de saída</div>
+        <div class="drop-list" id="dropList"></div>
+      </div>
+    </div>
+
+    <!-- SESSIONS TABLE -->
+    <div class="card">
+      <div class="sec-title">Sessões <span class="sec-badge" id="sessionBadge">—</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data / Hora</th>
+              <th>Sessão</th>
+              <th>Último passo</th>
+              <th>Fluxo</th>
+              <th>Passos</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="sessionsBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <span class="page-info" id="pageInfo">—</span>
+        <div class="page-btns" id="pageBtns"></div>
+      </div>
+    </div>
+
+  </div><!-- /dashboard -->
+</div>
+
+<script>
+// ── CONFIG ──
+const SURL='https://auxjrxzdvbijhieyhphq.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1eGpyeHpkdmJpamhpZXloaHBocSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzgwMDc3NjU1LCJleHAiOjIwOTU2NTM2NTF9.FsuUl87YpOp9CC48fWFvQg49oOvLiEQ7PbWfpTGK5Mw';
+const ADMIN_PASS='quiz@admin2026';
+const sb=supabase.createClient(SURL,SKEY);
+
+// ── STEP LABELS ──
+const LABELS={
+  '0':'E00 — Capa','1':'E01 — Tamanho da casa','2':'E02 — Criança pequena',
+  '3':'E03 — Trabalho/HO','4':'E04 — Organiza tarefas','5':'E05 — Limpeza equilibrada',
+  '6':'E06 — Emoção','7':'E07 — Tem diarista?',
+  'a8':'EA08 — Divisão de tarefas','a9':'EA09 — Clareza funcionária',
+  'a10':'EA10 — Casa do jeito?','a11':'EA11 — Faz como espera?',
+  'a12':'EA12 — Limpezas escondidas','a13':'EA13 — Não saiu como quer',
+  'a14':'EA14 — Sobrecarregada?','a15':'EA15 — Toparia cronograma',
+  'a16':'EA16 — Loading A','a17':'EA17 — Resultado A','a18':'EA18 — Página de vendas A',
+  'b7':'EB07 — Vive limpando?','b8':'EB08 — Deixou descanso?',
+  'b9':'EB09 — Sobrecarga','b10':'EB10 — 1 hora livre',
+  'b11':'EB11 — Toparia cronograma','b12':'EB12 — Loading B',
+  'b13':'EB13 — Resultado B','b14':'EB14 — Página de vendas B'
+};
+const FUNNEL_ORDER=['0','1','2','3','4','5','6','7',
+  '__A','a8','a9','a10','a11','a12','a13','a14','a15','a16','a17','a18',
+  '__B','b7','b8','b9','b10','b11','b12','b13','b14'];
+const FUNNEL_CSS={'0':'fb-purple','1':'fb-purple','2':'fb-purple','3':'fb-purple',
+  '4':'fb-purple','5':'fb-purple','6':'fb-purple','7':'fb-purple',
+  'a8':'fb-violet','a9':'fb-violet','a10':'fb-violet','a11':'fb-violet',
+  'a12':'fb-violet','a13':'fb-violet','a14':'fb-violet','a15':'fb-violet',
+  'a16':'fb-violet','a17':'fb-violet','a18':'fb-green',
+  'b7':'fb-teal','b8':'fb-teal','b9':'fb-teal','b10':'fb-teal',
+  'b11':'fb-teal','b12':'fb-teal','b13':'fb-teal','b14':'fb-green'};
+
+// ── STATE ──
+let currentFilter='hoje', allSessions=[], currentPage=0;
+const PAGE_SIZE=10;
+
+// ── AUTH ──
+function doAuth(){
+  const v=document.getElementById('authInput').value;
+  if(v===ADMIN_PASS){
+    localStorage.setItem('_adm','1');
+    document.getElementById('authOverlay').style.display='none';
+    init();
+  } else {
+    document.getElementById('authErr').style.display='block';
+  }
+}
+
+// ── DATE HELPERS ──
+function getStartDate(filter){
+  const d=new Date();
+  if(filter==='hoje'){d.setHours(0,0,0,0);}
+  else if(filter==='7dias'){d.setDate(d.getDate()-7);d.setHours(0,0,0,0);}
+  else{d.setDate(d.getDate()-30);d.setHours(0,0,0,0);}
+  return d;
+}
+function fmtDate(iso){
+  const d=new Date(iso);
+  return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})
+    +' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── LOAD DATA FROM SUPABASE ──
+async function loadData(){
+  document.getElementById('loadingState').style.display='block';
+  document.getElementById('dashboard').style.display='none';
+
+  const start=getStartDate(currentFilter);
+  const {data,error}=await sb.from('quiz_events')
+    .select('session_id,step,action,answer,branch,created_at')
+    .gte('created_at',start.toISOString())
+    .order('created_at',{ascending:true});
+
+  if(error||!data){
+    document.getElementById('loadingState').innerHTML=
+      '<div class="empty"><div class="empty-icon">⚠️</div><p>Erro ao carregar dados.<br>Verifique se a tabela foi criada no Supabase.</p></div>';
+    return;
+  }
+
+  // Group events by session
+  const sessMap={};
+  data.forEach(e=>{
+    if(!sessMap[e.session_id]){
+      sessMap[e.session_id]={
+        id:e.session_id,started:e.created_at,steps:[],answers:{},
+        branch:null,lastStep:null,lastTime:e.created_at
+      };
+    }
+    const s=sessMap[e.session_id];
+    if(e.action==='view'&&!s.steps.includes(e.step)){s.steps.push(e.step);}
+    if(e.action==='answer'){s.answers[e.step]=e.answer||'';}
+    if(e.branch){s.branch=e.branch;}
+    s.lastStep=e.step;
+    s.lastTime=e.created_at;
+  });
+  allSessions=Object.values(sessMap).sort((a,b)=>new Date(b.lastTime)-new Date(a.lastTime));
+
+  // Step counts (unique sessions per step)
+  const stepCounts={};
+  allSessions.forEach(s=>{s.steps.forEach(st=>{stepCounts[st]=(stepCounts[st]||0)+1;});});
+
+  renderKPIs(allSessions,stepCounts);
+  renderFunnel(stepCounts,allSessions.length);
+  renderBreakdown(allSessions,stepCounts);
+  currentPage=0;
+  renderSessions();
+
+  document.getElementById('loadingState').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+}
+
+// ── KPIs ──
+function renderKPIs(sessions,stepCounts){
+  const total=sessions.length;
+  const result=sessions.filter(s=>['a17','a18','b13','b14'].some(x=>s.steps.includes(x))).length;
+  const venda=sessions.filter(s=>s.steps.includes('a18')||s.steps.includes('b14')).length;
+  const fa=sessions.filter(s=>s.branch==='A').length;
+  const fb=sessions.filter(s=>s.branch==='B').length;
+  document.getElementById('kTotal').textContent=total||'0';
+  document.getElementById('kResult').textContent=result||'0';
+  document.getElementById('kResultSub').textContent=total?Math.round(result/total*100)+'% dos acessos':'0%';
+  document.getElementById('kVenda').textContent=venda||'0';
+  document.getElementById('kVendaSub').textContent=total?Math.round(venda/total*100)+'% dos acessos':'0%';
+  document.getElementById('kFluxo').textContent=fa+' / '+fb;
+  const lbl=currentFilter==='hoje'?'hoje':currentFilter==='7dias'?'7 dias':'30 dias';
+  document.getElementById('funnelBadge').textContent=lbl;
+  document.getElementById('sessionBadge').textContent=total+' sessões';
+}
+
+// ── FUNNEL ──
+function renderFunnel(stepCounts,total){
+  const max=stepCounts['0']||total||1;
+  let html='';
+  FUNNEL_ORDER.forEach(s=>{
+    if(s==='__A'){html+=`<div class="funnel-divider"></div><span class="funnel-badge badge-a">⬇ Fluxo A — Tem diarista</span>`;return;}
+    if(s==='__B'){html+=`<div class="funnel-divider"></div><span class="funnel-badge badge-b">⬇ Fluxo B — Faz sozinha</span>`;return;}
+    const n=stepCounts[s]||0;
+    const w=max>0?Math.round((n/max)*100):0;
+    const pct=total>0?Math.round((n/total)*100):0;
+    html+=`<div class="funnel-row">
+      <div class="funnel-lbl" title="${LABELS[s]||s}">${LABELS[s]||s}</div>
+      <div class="funnel-bar-bg"><div class="funnel-bar ${FUNNEL_CSS[s]||'fb-purple'}" style="width:${w}%">${n>3?n:''}</div></div>
+      <div class="funnel-count">${n}</div>
+      <div class="funnel-pct">${pct}%</div>
+    </div>`;
+  });
+  document.getElementById('funnelContent').innerHTML=html||'<div class="empty"><div class="empty-icon">📊</div><p>Sem dados no período</p></div>';
+}
+
+// ── BREAKDOWN + DROP-OFFS ──
+function renderBreakdown(sessions,stepCounts){
+  const fa=sessions.filter(s=>s.branch==='A').length;
+  const fb=sessions.filter(s=>s.branch==='B').length;
+  const total=fa+fb||1;
+  const vaA=sessions.filter(s=>s.steps.includes('a18')).length;
+  const vaB=sessions.filter(s=>s.steps.includes('b14')).length;
+
+  function brow(color,label,val,tot){
+    const pct=tot>0?Math.round(val/tot*100):0;
+    return `<div class="breakdown-item">
+      <div class="breakdown-dot" style="background:${color}"></div>
+      <div class="breakdown-lbl">${label}</div>
+      <div class="breakdown-bar-bg"><div class="breakdown-bar" style="background:${color};width:${pct}%"></div></div>
+      <div class="breakdown-val">${val}</div>
+      <div class="breakdown-pct">${pct}%</div>
+    </div>`;
+  }
+  document.getElementById('breakdownContent').innerHTML=
+    brow('#7C3AED','Fluxo A — Tem diarista',fa,total)+
+    brow('#16A34A','Fluxo B — Faz sozinha',fb,total)+
+    brow('#22C55E','Chegaram à venda (A)',vaA,fa||1)+
+    brow('#84CC16','Chegaram à venda (B)',vaB,fb||1);
+
+  // Drop-offs: biggest drops between consecutive funnel steps
+  const drops=[];
+  const realSteps=FUNNEL_ORDER.filter(s=>!s.startsWith('__'));
+  for(let i=1;i<realSteps.length;i++){
+    const prev=stepCounts[realSteps[i-1]]||0;
+    const curr=stepCounts[realSteps[i]]||0;
+    if(prev>0){
+      const drop=Math.round((prev-curr)/prev*100);
+      if(drop>0) drops.push({s:LABELS[realSteps[i]]||realSteps[i],v:drop,prev,curr});
+    }
+  }
+  drops.sort((a,b)=>b.v-a.v);
+  const top5=drops.slice(0,5);
+  document.getElementById('dropList').innerHTML=top5.length
+    ?top5.map(d=>`<div class="drop-item"><span class="drop-step">${d.s}</span><span class="drop-val" style="color:${d.v>15?'#EF4444':d.v>8?'#F59E0B':'#94A3B8'}">-${d.v}%</span></div>`).join('')
+    :'<div class="empty" style="padding:12px"><p>Sem dados suficientes</p></div>';
+}
+
+// ── SESSIONS TABLE ──
+const STATUS_BADGE={
+  venda:'<span class="badge-step bs-venda">Chegou à venda</span>',
+  result:'<span class="badge-step bs-result">Viu o resultado</span>',
+  quiz:'<span class="badge-step bs-quiz">Ainda no quiz</span>',
+  saiu:'<span class="badge-step bs-saiu">Saiu cedo</span>'
+};
+function getStatus(s){
+  if(s.steps.includes('a18')||s.steps.includes('b14')) return 'venda';
+  if(s.steps.includes('a17')||s.steps.includes('b13')) return 'result';
+  if(s.steps.length>3) return 'quiz';
+  return 'saiu';
+}
+function getFlowBadge(s){
+  if(s.branch==='A') return '<span class="badge-flow bf-a">A — Diarista</span>';
+  if(s.branch==='B') return '<span class="badge-flow bf-b">B — Sozinha</span>';
+  return '<span class="badge-flow bf-n">—</span>';
+}
+
+function renderSessions(){
+  const total=allSessions.length;
+  const pages=Math.ceil(total/PAGE_SIZE);
+  const slice=allSessions.slice(currentPage*PAGE_SIZE,(currentPage+1)*PAGE_SIZE);
+
+  if(!slice.length){
+    document.getElementById('sessionsBody').innerHTML=
+      `<tr><td colspan="7"><div class="empty"><div class="empty-icon">🔍</div><p>Nenhuma sessão no período selecionado</p></div></td></tr>`;
+    document.getElementById('pageInfo').textContent='0 sessões';
+    document.getElementById('pageBtns').innerHTML='';
+    return;
+  }
+
+  const rows=slice.map(s=>{
+    const status=getStatus(s);
+    const shortId=s.id.slice(0,6);
+    const journey=s.steps.map((step,i)=>{
+      const isLast=i===s.steps.length-1;
+      return `<span class="j-step${isLast?' j-last':''}">${step}</span>${i<s.steps.length-1?'<span class="j-arrow">›</span>':''}`;
+    }).join('');
+    const answers=Object.entries(s.answers||{}).map(([q,a])=>
+      `<div class="ans-row"><div class="ans-q">${LABELS[q]||q}</div><div class="ans-a">${a}</div></div>`
+    ).join('');
+    const detailHTML=`
+      <div style="font-size:12.5px;font-weight:700;color:#5B21B6;margin-bottom:8px">📍 Jornada (${s.steps.length} passos)</div>
+      <div class="journey">${journey}</div>
+      ${answers?`<div style="font-size:12.5px;font-weight:700;color:#5B21B6;margin:12px 0 6px">🖊 Respostas</div><div class="detail-answers">${answers}</div>`:''}`;
+    return `
+      <tr onclick="toggleRow('det-${shortId}',this)">
+        <td><strong>${fmtDate(s.started)}</strong></td>
+        <td><code style="font-size:12px;background:#F1F5F9;padding:2px 6px;border-radius:4px">#${shortId}</code></td>
+        <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${LABELS[s.lastStep]||s.lastStep||'—'}">${LABELS[s.lastStep]||s.lastStep||'—'}</td>
+        <td>${getFlowBadge(s)}</td>
+        <td><strong>${s.steps.length}</strong></td>
+        <td>${STATUS_BADGE[status]}</td>
+        <td><button class="btn-detail" onclick="event.stopPropagation();toggleRow('det-${shortId}',this.closest('tr'))">Ver</button></td>
+      </tr>
+      <tr class="detail-row" id="det-${shortId}">
+        <td class="detail-cell" colspan="7">${detailHTML}</td>
+      </tr>`;
+  }).join('');
+  document.getElementById('sessionsBody').innerHTML=rows;
+
+  // Pagination
+  document.getElementById('pageInfo').textContent=
+    `Mostrando ${currentPage*PAGE_SIZE+1}–${Math.min((currentPage+1)*PAGE_SIZE,total)} de ${total} sessões`;
+  let pBtns='';
+  if(currentPage>0) pBtns+=`<button class="pbtn" onclick="goPage(${currentPage-1})">←</button>`;
+  for(let i=0;i<Math.min(pages,5);i++){
+    pBtns+=`<button class="pbtn${i===currentPage?' active':''}" onclick="goPage(${i})">${i+1}</button>`;
+  }
+  if(currentPage<pages-1) pBtns+=`<button class="pbtn" onclick="goPage(${currentPage+1})">→</button>`;
+  document.getElementById('pageBtns').innerHTML=pBtns;
+}
+
+function goPage(p){currentPage=p;renderSessions();window.scrollTo(0,0);}
+
+function toggleRow(id,tr){
+  const det=document.getElementById(id);
+  const isOpen=det&&det.classList.contains('open');
+  document.querySelectorAll('.detail-row').forEach(r=>r.classList.remove('open'));
+  document.querySelectorAll('tbody tr:not(.detail-row)').forEach(r=>r.classList.remove('expanded'));
+  if(!isOpen&&det){det.classList.add('open');if(tr)tr.classList.add('expanded');}
+}
+
+function setFilter(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  loadData();
+}
+
+// ── INIT ──
+function init(){
+  document.getElementById('dateLabel').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  loadData();
+  setInterval(loadData,60000); // auto-refresh every 60s
+}
+
+// Check auth on load
+if(localStorage.getItem('_adm')==='1'){
+  document.getElementById('authOverlay').style.display='none';
+  init();
+}
+</script>
+</body>
+</html>
