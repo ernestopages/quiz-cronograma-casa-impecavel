@@ -207,17 +207,31 @@ tbody td{padding:12px 14px;font-size:13px;vertical-align:middle}
       </div>
     </div>
 
-    <!-- FUNNEL + BREAKDOWN -->
-    <div class="two-col">
-      <div class="card">
-        <div class="sec-title">Funil de Etapas <span class="sec-badge" id="funnelBadge">—</span></div>
-        <div id="funnelContent"></div>
+    <!-- 3 FUNNELS WITH INSIGHTS -->
+    <div class="card">
+      <div class="sec-title">📍 Fluxo Inicial — Etapas Comuns (E00-E07)</div>
+      <div id="funnelInicial"></div>
+      <div class="sec-title" style="margin-top:16px;margin-bottom:10px">Pontos de Saída & Insights</div>
+      <div id="dropListInicial"></div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">💼 Fluxo A — Tem Diarista/Funcionária (EA08-EA18)</div>
+      <div id="funnelA"></div>
+      <div class="sec-title" style="margin-top:16px;margin-bottom:10px">Pontos de Saída & Insights</div>
+      <div id="dropListA"></div>
+      <div style="background:#EEF2FF;border:1px solid #DDD6FE;border-radius:8px;padding:10px;margin-top:12px;font-size:12px;color:#5B21B6">
+        <strong>Conversão para Fluxo A:</strong> <span id="conversionA">—</span> pessoas
       </div>
-      <div class="card">
-        <div class="sec-title">Divisão dos Fluxos</div>
-        <div id="breakdownContent"></div>
-        <div class="sec-title" style="margin-top:20px;margin-bottom:8px">Maiores pontos de saída</div>
-        <div class="drop-list" id="dropList"></div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">🧹 Fluxo B — Faz Tudo Sozinha (EB07-EB14)</div>
+      <div id="funnelB"></div>
+      <div class="sec-title" style="margin-top:16px;margin-bottom:10px">Pontos de Saída & Insights</div>
+      <div id="dropListB"></div>
+      <div style="background:#D1FAE5;border:1px solid #A7F3D0;border-radius:8px;padding:10px;margin-top:12px;font-size:12px;color:#065F46">
+        <strong>Conversão para Fluxo B:</strong> <span id="conversionB">—</span> pessoas
       </div>
     </div>
 
@@ -312,6 +326,56 @@ function fmtDate(iso){
     +' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 }
 
+// ── FUNNEL & INSIGHTS ──
+const FUNNEL_INICIAL=['0','1','2','3','4','5','6','7'];
+const FUNNEL_A=['a8','a9','a10','a11','a12','a13','a14','a15','a16','a17','a18'];
+const FUNNEL_B=['b7','b8','b9','b10','b11','b12','b13','b14'];
+
+function generateInsight(dropPct,conversionRate,stepIndex,totalSteps){
+  let insight='';let severity='';
+  if(dropPct>=50){severity='high';insight=`🔴 CRÍTICO: ${dropPct}% queda. Revise, reescreva ou remova esta etapa.`;}
+  else if(dropPct>=30){severity='high';insight=`🟠 ALTO: ${dropPct}% queda. A pergunta pode ser confusa ou desmotivadora.`;}
+  else if(dropPct>=15){severity='medium';insight=`🟡 MÉDIO: ${dropPct}% queda. Monitore ou ajuste a redação.`;}
+  else if(dropPct>0){severity='low';insight=`✅ BOM: ${dropPct}% queda. Taxa normal de abandono.`;}
+  return{text:insight,severity:severity};
+}
+
+function calculateDropOffsWithInsights(funnelOrder,stepCounts){
+  const drops=[];
+  for(let i=1;i<funnelOrder.length;i++){
+    const prev=stepCounts[funnelOrder[i-1]]||0;const curr=stepCounts[funnelOrder[i]]||0;
+    if(prev>0){
+      const dropPct=Math.round((prev-curr)/prev*100);
+      drops.push({
+        step:funnelOrder[i],label:LABELS[funnelOrder[i]]||funnelOrder[i],
+        dropPct:dropPct,prevCount:prev,currCount:curr,
+        insight:generateInsight(dropPct,Math.round(curr/prev*100),i,funnelOrder.length)
+      });
+    }
+  }
+  return drops.sort((a,b)=>b.dropPct-a.dropPct);
+}
+
+function renderFunnelCard(funnelOrder,stepCounts,label,elemId){
+  const max=stepCounts[funnelOrder[0]]||0;if(!max){document.getElementById(elemId).innerHTML='<p style="color:#94A3B8">Sem dados</p>';return;}
+  let html='';
+  funnelOrder.forEach(s=>{
+    const n=stepCounts[s]||0;const w=Math.round(n/max*100);const css=FUNNEL_CSS[s]||'fb-purple';
+    html+=`<div class="funnel-row"><div class="funnel-lbl">${LABELS[s]||s}</div><div class="funnel-bar-bg"><div class="funnel-bar ${css}" style="width:${w}%">${n>2?n:''}</div></div><div class="funnel-count">${n}</div></div>`;
+  });
+  document.getElementById(elemId).innerHTML=html;
+}
+
+function renderDropOffsCard(drops,elemId){
+  let html='';
+  drops.slice(0,5).forEach(d=>{
+    const color=d.insight.severity==='high'?'#EF4444':d.insight.severity==='medium'?'#F59E0B':'#22C55E';
+    html+=`<div class="drop-item" style="border-left:3px solid ${color};padding-left:12px;margin-bottom:8px"><span class="drop-step">${d.label}</span><span class="drop-val" style="color:${color}">-${d.dropPct}%</span></div>`;
+    html+=`<div style="background:${color}15;margin:0 0 12px;padding:8px;border-radius:6px;font-size:11px;color:#374151;border-left:3px solid ${color};line-height:1.4">${d.insight.text}</div>`;
+  });
+  document.getElementById(elemId).innerHTML=html||'<p style="color:#94A3B8">Sem dados</p>';
+}
+
 // ── LOAD DATA FROM SUPABASE ──
 async function loadData(){
   document.getElementById('loadingState').style.display='block';
@@ -349,13 +413,38 @@ async function loadData(){
   });
   allSessions=Object.values(sessMap).sort((a,b)=>new Date(b.lastTime)-new Date(a.lastTime));
 
-  // Step counts (unique sessions per step)
-  const stepCounts={};
-  allSessions.forEach(s=>{s.steps.forEach(st=>{stepCounts[st]=(stepCounts[st]||0)+1;});});
+  // Step counts for 3 independent funnels
+  const stepCountsInicial={},stepCountsA={},stepCountsB={};
+  const flowASessions=allSessions.filter(s=>s.branch==='A');
+  const flowBSessions=allSessions.filter(s=>s.branch==='B');
 
-  renderKPIs(allSessions,stepCounts);
-  renderFunnel(stepCounts,allSessions.length);
-  renderBreakdown(allSessions,stepCounts);
+  // Populate Inicial (all users, steps 0-7)
+  allSessions.forEach(s=>{s.steps.filter(st=>FUNNEL_INICIAL.includes(st)).forEach(st=>{stepCountsInicial[st]=(stepCountsInicial[st]||0)+1;});});
+  // Populate A (branch A only, steps a8-a18)
+  flowASessions.forEach(s=>{s.steps.filter(st=>FUNNEL_A.includes(st)).forEach(st=>{stepCountsA[st]=(stepCountsA[st]||0)+1;});});
+  // Populate B (branch B only, steps b7-b14)
+  flowBSessions.forEach(s=>{s.steps.filter(st=>FUNNEL_B.includes(st)).forEach(st=>{stepCountsB[st]=(stepCountsB[st]||0)+1;});});
+
+  renderKPIs(allSessions,stepCountsInicial);
+
+  // Render 3 funnels
+  renderFunnelCard(FUNNEL_INICIAL,stepCountsInicial,'Inicial','funnelInicial');
+  renderFunnelCard(FUNNEL_A,stepCountsA,'A','funnelA');
+  renderFunnelCard(FUNNEL_B,stepCountsB,'B','funnelB');
+
+  // Render drop-offs with insights
+  const dropsInicial=calculateDropOffsWithInsights(FUNNEL_INICIAL,stepCountsInicial);
+  const dropsA=calculateDropOffsWithInsights(FUNNEL_A,stepCountsA);
+  const dropsB=calculateDropOffsWithInsights(FUNNEL_B,stepCountsB);
+
+  renderDropOffsCard(dropsInicial,'dropListInicial');
+  renderDropOffsCard(dropsA,'dropListA');
+  renderDropOffsCard(dropsB,'dropListB');
+
+  // Show conversion rates
+  document.getElementById('conversionA').textContent=`${flowASessions.length} (${Math.round(flowASessions.length/allSessions.length*100)}% do total)`;
+  document.getElementById('conversionB').textContent=`${flowBSessions.length} (${Math.round(flowBSessions.length/allSessions.length*100)}% do total)`;
+
   currentPage=0;
   renderSessions();
 
