@@ -465,9 +465,6 @@ function renderKPIs(sessions,stepCounts){
   document.getElementById('kVenda').textContent=venda||'0';
   document.getElementById('kVendaSub').textContent=total?Math.round(venda/total*100)+'% dos acessos':'0%';
   document.getElementById('kFluxo').textContent=fa+' / '+fb;
-  const lbl=currentFilter==='hoje'?'hoje':currentFilter==='7dias'?'7 dias':'30 dias';
-  document.getElementById('funnelBadge').textContent=lbl;
-  document.getElementById('sessionBadge').textContent=total+' sessões';
 }
 
 // ── FUNNEL ──
