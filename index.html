@@ -11,6 +11,11 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{font-family:'Poppins',sans-serif;background:#F7F4FD;color:#1a1a2e;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 
+/* ── IMAGE OPTIMIZATION ── */
+img{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:loading 1.5s infinite;}
+img[data-loaded]{animation:none;background:transparent;}
+@keyframes loading{0%{background-position:200% 0}to{background-position:-200% 0}}
+
 /* ── QUIZ HEADER (logo + progress) ── */
 #qhdr{position:fixed;top:0;left:0;right:0;background:#fff;padding:10px 20px 11px;box-shadow:0 1px 10px rgba(0,0,0,.07);z-index:999;display:none}
 #qhdr.on{display:block}
@@ -747,6 +752,22 @@ function startTimer(id){
   var r=960;(function t(){if(r<0){el.textContent='00:00';return;}var m=Math.floor(r/60),s=r%60;el.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;r--;setTimeout(t,1000);})();
 }
 startTimer('timerA');startTimer('timerB');
+
+// ── IMAGE OPTIMIZATION ──
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('img').forEach(img=>{
+    var timeout=setTimeout(function(){if(!img.dataset.loaded){img.style.opacity='0.5';}},3000);
+    img.addEventListener('load',function(){
+      clearTimeout(timeout);
+      img.setAttribute('data-loaded','1');
+      img.style.opacity='1';
+    });
+    img.addEventListener('error',function(){
+      clearTimeout(timeout);
+      img.style.display='none';
+    });
+  });
+});
 </script>
 </body>
 </html>
