@@ -723,9 +723,11 @@ function br(type,btn,next){
   requestAnimationFrame(function(){requestAnimationFrame(function(){go(next);});});
 }
 function checkout(){
-  window.location.href=flow==='A'
-    ?'https://indec-digital.mycartpanda.com/checkout/210517224:1'
-    :'https://indec-digital.mycartpanda.com/checkout/210659469:1';
+  setTimeout(function(){
+    window.location.href=flow==='A'
+      ?'https://indec-digital.mycartpanda.com/checkout/210517224:1'
+      :'https://indec-digital.mycartpanda.com/checkout/210659469:1';
+  },300);
 }
 function tm(btn){
   btn.classList.toggle('sel');
